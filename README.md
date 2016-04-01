@@ -1,6 +1,6 @@
 ## (Base) Mix for Vesperin
 
-Bunch of utilities needed by Vesperin's main features. Some of these utilities include: (1) Java parser with automatic input-code detection (e.g., Compilation Unit, Code Block, Statement), (2) Locators API for identified fragments of code, (3) Syntax error reporting, etc.    
+Bunch of utilities needed by Vesperin's main features. Some of these utilities include: (1) Java parser with automatic input-code detection (e.g., Compilation Unit, Code Block, Statement), (2) Locators API for locating fragments of code, (3) Syntax error reporting, etc.
 
 ### Usage examples
 
