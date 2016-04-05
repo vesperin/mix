@@ -2,6 +2,7 @@ package com.vesperin.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.vesperin.common.locations.Locations;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -52,5 +53,7 @@ public class JavaParserTest {
     assertThat(parsedContext.locateClasses().size() == 1, is(true));
     assertThat(parsedContext.locateFields().size() == 0, is(true));
     assertThat(parsedContext.locateMethods().size() == 1, is(true));
+    assertThat(parsedContext.locateUnit(Locations.createLocation(SRC, SRC.getContent(), 31, 35)).size() == 1, is(true));
+
   }
 }

@@ -8,6 +8,7 @@ import com.vesperin.common.locators.FieldUnit;
 import com.vesperin.common.locators.MethodUnit;
 import com.vesperin.common.locators.ProgramUnit;
 import com.vesperin.common.locators.ProgramUnitLocator;
+import com.vesperin.common.locators.SelectedUnit;
 import com.vesperin.common.locators.UnitLocation;
 import com.vesperin.common.locators.UnitLocator;
 import com.vesperin.common.utils.Jdt;
@@ -171,6 +172,15 @@ public class Context {
    */
   public List<UnitLocation> locateClasses(){
     return getUnitLocator().locate(new ClassUnit());
+  }
+
+  /**
+   * Determine what program unit is located at some source code location.
+   * @param at a source code location.
+   * @return the unit location
+   */
+  public List<UnitLocation> locateUnit(Location at){
+    return getUnitLocator().locate(new SelectedUnit(at));
   }
 
   /**
