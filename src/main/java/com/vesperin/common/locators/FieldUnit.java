@@ -32,13 +32,13 @@ public class FieldUnit extends AbstractProgramUnit {
     super(name);
   }
 
-  @Override public List<Location> getLocations(Context context) {
+  @Override public List<UnitLocation> getLocations(Context context) {
     Preconditions.checkNotNull(context);
 
     return (!getIdentifier().equals("all")) ? findLocationsByIdentifier(context) : findAll(context);
   }
 
-  private static List<Location> findAll(Context context){
+  private static List<UnitLocation> findAll(Context context){
     final FieldDeclarations visitor = new FieldDeclarations();
     context.accept(visitor);
 
@@ -47,7 +47,7 @@ public class FieldUnit extends AbstractProgramUnit {
       .collect(Collectors.toList());
   }
 
-  @Override protected void addDeclaration(List<Location> locations, Location each, ASTNode eachNode) {
+  @Override protected void addDeclaration(List<UnitLocation> locations, Location each, ASTNode eachNode) {
     final FieldDeclaration field = parent(FieldDeclaration.class, eachNode);
 
     if (field != null) {

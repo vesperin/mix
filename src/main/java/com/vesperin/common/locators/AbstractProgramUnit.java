@@ -33,10 +33,10 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   }
 
 
-  protected static <T extends ASTNode> boolean contains(List<Location> nodes, T node){
+  protected static <T extends ASTNode> boolean contains(List<UnitLocation> nodes, T node){
     for(Location each : nodes){
-      final ProgramUnitLocation pul = (ProgramUnitLocation)each;
-      if(pul.getNode().equals(node) || pul.getNode() == node ) return true;
+      final UnitLocation pul = (UnitLocation)each;
+      if(pul.getUnitNode().equals(node) || pul.getUnitNode() == node ) return true;
     }
 
     return false;
@@ -47,10 +47,10 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   }
 
 
-  protected List<Location> findLocationsByIdentifier(Context parsedContext){
+  protected List<UnitLocation> findLocationsByIdentifier(Context parsedContext){
     Preconditions.checkNotNull(parsedContext);
 
-    final List<Location> locations = new ArrayList<>();
+    final List<UnitLocation> locations = new ArrayList<>();
     final List<Location> instances = Locations.locateWord(parsedContext.getSource(), getIdentifier());
 
     for(Location each : instances){
@@ -62,7 +62,7 @@ abstract class AbstractProgramUnit implements ProgramUnit {
     return locations;
   }
 
-  protected void addLocations(Context parsedContext, List<Location> locations, Location each) {
+  protected void addLocations(Context parsedContext, List<UnitLocation> locations, Location each) {
     final StatementsSelectionVisitor statements = new StatementsSelectionVisitor(
       each,
       true
@@ -86,7 +86,7 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   }
 
 
-  protected abstract void addDeclaration(List<Location> namedLocations, Location each, ASTNode eachNode);
+  protected abstract void addDeclaration(List<UnitLocation> namedLocations, Location each, ASTNode eachNode);
 
   @Override public String toString() {
     return "ProgramUnit(" + getIdentifier() + ")";

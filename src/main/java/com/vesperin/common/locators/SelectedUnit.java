@@ -24,10 +24,10 @@ public class SelectedUnit extends AbstractProgramUnit {
     this.selection = selection;
   }
 
-  @Override public List<Location> getLocations(Context context) {
+  @Override public List<UnitLocation> getLocations(Context context) {
     ensureIsWildCard();
 
-    final List<Location> locations = Lists.newArrayList();
+    final List<UnitLocation> locations = Lists.newArrayList();
 
     addLocations(context, locations, selection);
 
@@ -40,7 +40,7 @@ public class SelectedUnit extends AbstractProgramUnit {
     }
   }
 
-  @Override protected void addDeclaration(List<Location> locations, Location each, ASTNode eachNode) {
+  @Override protected void addDeclaration(List<UnitLocation> locations, Location each, ASTNode eachNode) {
     locations.add(new ProgramUnitLocation(eachNode, each));
   }
 }

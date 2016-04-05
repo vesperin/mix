@@ -4,7 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -39,5 +41,16 @@ public class JavaParserTest {
     } catch (Exception e){
       fail("Context should have been well formed");
     }
+  }
+
+
+  @Test public void testBasicLocator() throws Exception {
+
+    final JavaParser parser = new EclipseJavaParser();
+
+    final Context parsedContext = parser.parseJava(SRC);
+    assertThat(parsedContext.locateClasses().size() == 1, is(true));
+    assertThat(parsedContext.locateFields().size() == 0, is(true));
+    assertThat(parsedContext.locateMethods().size() == 1, is(true));
   }
 }

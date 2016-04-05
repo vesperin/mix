@@ -3,10 +3,13 @@ package com.vesperin.common.locators;
 import com.google.common.base.Preconditions;
 import com.vesperin.common.Context;
 import com.vesperin.common.locations.Location;
+import com.vesperin.common.locations.Locations;
+import com.vesperin.common.utils.Jdt;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This element represents classes in the base Source.
@@ -14,6 +17,12 @@ import java.util.List;
  * @author Huascar Sanchez
  */
 public class ClassUnit extends AbstractProgramUnit {
+  /**
+   * Construct a new {@code Class} program unit.
+   */
+  public ClassUnit(){
+    this("all");
+  }
 
   /**
    * Construct a new {@code Class} program unit.
@@ -24,14 +33,23 @@ public class ClassUnit extends AbstractProgramUnit {
     super(name);
   }
 
-  @Override public List<Location> getLocations(Context context) {
+  @Override public List<UnitLocation> getLocations(Context context) {
 
     Preconditions.checkNotNull(context);
 
-    return findLocationsByIdentifier(context);
+    return (!getIdentifier().equals("all")) ? findLocationsByIdentifier(context) : findAll(context);
   }
 
-  @Override protected void addDeclaration(List<Location> locations, Location each, ASTNode eachNode) {
+  private static List<UnitLocation> findAll(Context context){
+
+    final List<TypeDeclaration> types = Jdt.typeSafeList(TypeDeclaration.class, context.getCompilationUnit().types());
+
+    return types.stream()
+      .map(each -> new ProgramUnitLocation(each, Locations.locate(each)))
+      .collect(Collectors.toList());
+  }
+
+  @Override protected void addDeclaration(List<UnitLocation> locations, Location each, ASTNode eachNode) {
     final TypeDeclaration classDeclaration = parent(
       TypeDeclaration.class,
       eachNode

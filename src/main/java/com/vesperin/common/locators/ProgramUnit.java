@@ -1,7 +1,6 @@
 package com.vesperin.common.locators;
 
 import com.vesperin.common.Context;
-import com.vesperin.common.locations.Location;
 
 import java.util.List;
 
@@ -21,5 +20,5 @@ public interface ProgramUnit {
    * @param context a parsed context.
    * @return new list of locations.
    */
-  List<Location> getLocations(Context context);
+  List<UnitLocation> getLocations(Context context);
 }

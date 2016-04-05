@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 /**
  * @author Huascar Sanchez
  */
-public class ProgramUnitLocation implements Location {
+public class ProgramUnitLocation implements UnitLocation {
   private static final int METHOD_DECLARATION = ASTNode.METHOD_DECLARATION;
   private static final int TYPE_DECLARATION = ASTNode.TYPE_DECLARATION;
   private static final int VARIABLE_DECLARATION = ASTNode.SINGLE_VARIABLE_DECLARATION;
@@ -86,7 +86,7 @@ public class ProgramUnitLocation implements Location {
     }
   }
 
-  public ASTNode getNode() {
+  @Override public ASTNode getUnitNode() {
     return node;
   }
 
@@ -107,7 +107,7 @@ public class ProgramUnitLocation implements Location {
   }
 
   @Override public String toString() {
-    final ASTNode node = getNode();
+    final ASTNode node = getUnitNode();
     return nameUnit(node);
   }
 }

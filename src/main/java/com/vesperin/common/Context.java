@@ -3,8 +3,12 @@ package com.vesperin.common;
 import com.google.common.collect.Lists;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
+import com.vesperin.common.locators.ClassUnit;
+import com.vesperin.common.locators.FieldUnit;
+import com.vesperin.common.locators.MethodUnit;
 import com.vesperin.common.locators.ProgramUnit;
 import com.vesperin.common.locators.ProgramUnitLocator;
+import com.vesperin.common.locators.UnitLocation;
 import com.vesperin.common.locators.UnitLocator;
 import com.vesperin.common.utils.Jdt;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -144,8 +148,29 @@ public class Context {
   /**
    * @see {@link UnitLocator#locate(ProgramUnit)} for more information.
    */
-  public List<Location> locate(ProgramUnit unit){
+  public List<UnitLocation> locate(ProgramUnit unit){
     return getUnitLocator().locate(unit);
+  }
+
+  /**
+   * @return list of methods in the parsed source file.
+   */
+  public List<UnitLocation> locateMethods(){
+    return getUnitLocator().locate(new MethodUnit());
+  }
+
+  /**
+   * @return list of fields in the parsed source file.
+   */
+  public List<UnitLocation> locateFields(){
+    return getUnitLocator().locate(new FieldUnit());
+  }
+
+  /**
+   * @return list of classes in the parsed source file (main, inner, static nested).
+   */
+  public List<UnitLocation> locateClasses(){
+    return getUnitLocator().locate(new ClassUnit());
   }
 
   /**

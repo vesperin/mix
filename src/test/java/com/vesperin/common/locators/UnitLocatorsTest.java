@@ -45,21 +45,21 @@ public class UnitLocatorsTest {
 
 
   @Test public void testClassUnitLocation() throws Exception {
-    final List<Location> locations = locator.locate(new ClassUnit("Foo"));
+    final List<UnitLocation> locations = locator.locate(new ClassUnit("Foo"));
 
     sharedAssertionChecking(locations);
     assertNodeType(locations, ASTNode.TYPE_DECLARATION);
   }
 
   @Test public void testMethodUnitLocation() throws Exception {
-    final List<Location> locations = locator.locate(new MethodUnit("exit"));
+    final List<UnitLocation> locations = locator.locate(new MethodUnit("exit"));
 
     sharedAssertionChecking(locations);
     assertNodeType(locations, ASTNode.METHOD_DECLARATION);
   }
 
   @Test public void testNodeSelection() throws Exception {
-    final List<Location> locations = locator.locate(new SelectedUnit(createLocation(SRC, SRC.getContent(), 31, 35)));
+    final List<UnitLocation> locations = locator.locate(new SelectedUnit(createLocation(SRC, SRC.getContent(), 31, 35)));
     sharedAssertionChecking(locations);
     assertNodeType(locations, ASTNode.SIMPLE_NAME);
   }
@@ -81,7 +81,7 @@ public class UnitLocatorsTest {
 
     final Context context = new EclipseJavaParser().parseJava(src);
     final UnitLocator locator = new ProgramUnitLocator(context);
-    final List<Location> locations = locator.locate(new FieldUnit("code"));
+    final List<UnitLocation> locations = locator.locate(new FieldUnit("code"));
 
     sharedAssertionChecking(locations);
     assertNodeType(locations, ASTNode.FIELD_DECLARATION);
@@ -109,20 +109,20 @@ public class UnitLocatorsTest {
     );
 
     final Context context = new EclipseJavaParser().parseJava(src);
-    final List<Location> locations = context.locate(new MethodUnit());
+    final List<UnitLocation> locations = context.locate(new MethodUnit());
 
     assertThat(locations.isEmpty(), is(false));
     assertThat(locations.size() == 2, is(true));
   }
 
-  private static void sharedAssertionChecking(List<Location> locations) {
+  private static void sharedAssertionChecking(List<UnitLocation> locations) {
     assertThat(locations.isEmpty(), is(false));
     assertThat(locations.size() == 1, is(true));
   }
 
-  private static void assertNodeType(List<Location> locations, int nodeType){
+  private static void assertNodeType(List<UnitLocation> locations, int nodeType){
     final ProgramUnitLocation pul = (ProgramUnitLocation) locations.get(0);
-    assertEquals(pul.getNode().getNodeType(), nodeType);
+    assertEquals(pul.getUnitNode().getNodeType(), nodeType);
   }
 
 

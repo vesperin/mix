@@ -2,7 +2,6 @@ package com.vesperin.common.locators;
 
 import com.google.common.base.Preconditions;
 import com.vesperin.common.Context;
-import com.vesperin.common.locations.Location;
 
 import java.util.List;
 
@@ -24,7 +23,7 @@ public class ProgramUnitLocator implements UnitLocator {
     this.record = new Record();
   }
 
-  @Override public List<Location> locate(ProgramUnit unit) {
+  @Override public List<UnitLocation> locate(ProgramUnit unit) {
     track(unit.getIdentifier(), unit);
 
     return unit.getLocations(context);

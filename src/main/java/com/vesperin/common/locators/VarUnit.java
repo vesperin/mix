@@ -23,13 +23,13 @@ public class VarUnit extends AbstractProgramUnit {
     super(name);
   }
 
-  @Override public List<Location> getLocations(Context context) {
+  @Override public List<UnitLocation> getLocations(Context context) {
     Preconditions.checkNotNull(context);
 
     return findLocationsByIdentifier(context);
   }
 
-  @Override protected void addDeclaration(List<Location> namedLocations, Location each, ASTNode eachNode) {
+  @Override protected void addDeclaration(List<UnitLocation> namedLocations, Location each, ASTNode eachNode) {
     final VariableDeclarationStatement localVar = parent(VariableDeclarationStatement.class, eachNode);
 
     if (localVar != null) {

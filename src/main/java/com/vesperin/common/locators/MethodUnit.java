@@ -32,13 +32,13 @@ public class MethodUnit extends AbstractProgramUnit {
     super(identifier);
   }
 
-  @Override public List<Location> getLocations(Context context) {
+  @Override public List<UnitLocation> getLocations(Context context) {
     Preconditions.checkNotNull(context);
 
     return (!getIdentifier().equals("all")) ? findLocationsByIdentifier(context) : findAll(context);
   }
 
-  private static List<Location> findAll(Context context){
+  private static List<UnitLocation> findAll(Context context){
     final MethodDeclarations visitor = new MethodDeclarations();
     context.accept(visitor);
 
@@ -47,7 +47,7 @@ public class MethodUnit extends AbstractProgramUnit {
       .collect(Collectors.toList());
   }
 
-  @Override protected void addDeclaration(List<Location> locations, Location each, ASTNode eachNode) {
+  @Override protected void addDeclaration(List<UnitLocation> locations, Location each, ASTNode eachNode) {
     final MethodDeclaration methodDeclaration = parent(MethodDeclaration.class, eachNode);
 
     if (methodDeclaration != null) {
