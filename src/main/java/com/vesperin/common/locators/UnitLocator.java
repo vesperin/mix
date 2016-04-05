@@ -10,10 +10,10 @@ import java.util.List;
 public interface UnitLocator {
   /**
    *
-   * Locates a program unit.
+   * Locates program unit declarations.
    *
    * @param unit The program unit to be located, e.g., class, method, ....
-   * @return the list of locations containing this unit.
+   * @return the list of locations containing the declaration of this unit.
    */
   List<Location> locate(ProgramUnit unit);
 }

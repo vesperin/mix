@@ -21,14 +21,14 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   /**
    * Construct a new {@code AbstractProgramUnit}.
    *
-   * @param name the name of the program unit.
+   * @param identifier the identifier of the program unit.
    */
-  AbstractProgramUnit(String name){
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "Invalid name");
-    this.name = name;
+  AbstractProgramUnit(String identifier){
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(identifier), "Invalid identifier");
+    this.name = identifier;
   }
 
-  @Override public String getName() {
+  @Override public String getIdentifier() {
     return name;
   }
 
@@ -47,11 +47,11 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   }
 
 
-  protected List<Location> findLocations(Context parsedContext){
+  protected List<Location> findLocationsByIdentifier(Context parsedContext){
     Preconditions.checkNotNull(parsedContext);
 
     final List<Location> locations = new ArrayList<>();
-    final List<Location> instances = Locations.locateWord(parsedContext.getSource(), getName());
+    final List<Location> instances = Locations.locateWord(parsedContext.getSource(), getIdentifier());
 
     for(Location each : instances){
 
@@ -89,6 +89,6 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   protected abstract void addDeclaration(List<Location> namedLocations, Location each, ASTNode eachNode);
 
   @Override public String toString() {
-    return "ProgramUnit(" + getName() + ")";
+    return "ProgramUnit(" + getIdentifier() + ")";
   }
 }

@@ -86,6 +86,33 @@ public class UnitLocatorsTest {
     sharedAssertionChecking(locations);
     assertNodeType(locations, ASTNode.FIELD_DECLARATION);
 
+    assertThat(context.locate(new FieldUnit()).size() == 1, is(true));
+
+  }
+
+  @Test public void testAllMethodsLocation() throws Exception {
+    final Source src = Source.from("Foo",
+      Joiner.on("\n").join(
+        ImmutableList.of(
+          "public class Foo {"
+          , " private final int code = 0; "
+          , " public int exit(){"
+          , "   return code;"
+          , " }"
+          , " "
+          , " public int exit1(){"
+          , "   return code;"
+          , " }"
+          , "}"
+        )
+      )
+    );
+
+    final Context context = new EclipseJavaParser().parseJava(src);
+    final List<Location> locations = context.locate(new MethodUnit());
+
+    assertThat(locations.isEmpty(), is(false));
+    assertThat(locations.size() == 2, is(true));
   }
 
   private static void sharedAssertionChecking(List<Location> locations) {

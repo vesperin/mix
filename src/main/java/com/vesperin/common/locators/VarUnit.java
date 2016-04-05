@@ -26,7 +26,7 @@ public class VarUnit extends AbstractProgramUnit {
   @Override public List<Location> getLocations(Context context) {
     Preconditions.checkNotNull(context);
 
-    return findLocations(context);
+    return findLocationsByIdentifier(context);
   }
 
   @Override protected void addDeclaration(List<Location> namedLocations, Location each, ASTNode eachNode) {

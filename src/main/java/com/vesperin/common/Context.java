@@ -3,6 +3,9 @@ package com.vesperin.common;
 import com.google.common.collect.Lists;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
+import com.vesperin.common.locators.ProgramUnit;
+import com.vesperin.common.locators.ProgramUnitLocator;
+import com.vesperin.common.locators.UnitLocator;
 import com.vesperin.common.utils.Jdt;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -113,12 +116,6 @@ public class Context {
 
   }
 
-  public static Context createParsedContext(Source code){
-    final Context nonNullContext  = createContext(code);
-    final ParsedUnit unit        = new EclipseJavaParser().parseJava(nonNullContext);
-    return bindContext(nonNullContext, unit);
-  }
-
   public static Context createContext(Source code){
     final Source      nonNull = Objects.requireNonNull(code);
     return new Context(nonNull);
@@ -134,6 +131,21 @@ public class Context {
     final ASTNode node = unit.getParsedNode();
     context.setCompilationUnit(Jdt.parent(CompilationUnit.class, node));
     return context;
+  }
+
+  /**
+   * @return a program unit locator for this context.
+   */
+  public UnitLocator getUnitLocator(){
+    return new ProgramUnitLocator(this);
+  }
+
+
+  /**
+   * @see {@link UnitLocator#locate(ProgramUnit)} for more information.
+   */
+  public List<Location> locate(ProgramUnit unit){
+    return getUnitLocator().locate(unit);
   }
 
   /**

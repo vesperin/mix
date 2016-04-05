@@ -57,7 +57,7 @@ public class Jdt {
   }
 
 
-  public static ASTNode findDeclaration(IBinding binding, ASTNode root) {
+  public static ASTNode findASTNodeDeclaration(IBinding binding, ASTNode root) {
     root = root.getRoot();
     if (root instanceof CompilationUnit) {
       return CompilationUnit.class.cast(root).findDeclaringNode(binding);
@@ -104,7 +104,7 @@ public class Jdt {
     return result;
   }
 
-  public static IBinding getDeclaration(IBinding binding) {
+  public static IBinding getBindingDeclaration(IBinding binding) {
     if (binding instanceof ITypeBinding) {
       return ((ITypeBinding) binding).getTypeDeclaration();
     } else if (binding instanceof IMethodBinding) {
@@ -131,7 +131,7 @@ public class Jdt {
     }
   }
 
-  public static List<TypeDeclaration> getTypes(Context context) {
+  public static List<TypeDeclaration> getTypeDeclarations(Context context) {
     final CompilationUnit unit = context.getCompilationUnit();
     return Jdt.typeSafeList(TypeDeclaration.class, unit.types());
   }

@@ -14,6 +14,7 @@ import java.util.List;
  * @author Huascar Sanchez
  */
 public class ClassUnit extends AbstractProgramUnit {
+
   /**
    * Construct a new {@code Class} program unit.
    *
@@ -27,7 +28,7 @@ public class ClassUnit extends AbstractProgramUnit {
 
     Preconditions.checkNotNull(context);
 
-    return findLocations(context);
+    return findLocationsByIdentifier(context);
   }
 
   @Override protected void addDeclaration(List<Location> locations, Location each, ASTNode eachNode) {
@@ -38,7 +39,7 @@ public class ClassUnit extends AbstractProgramUnit {
 
     if (classDeclaration != null) {
       if (!contains(locations, classDeclaration) &&
-        getName().equals(classDeclaration.getName().getIdentifier())) {
+        getIdentifier().equals(classDeclaration.getName().getIdentifier())) {
 
         locations.add(new ProgramUnitLocation(classDeclaration, each));
       }

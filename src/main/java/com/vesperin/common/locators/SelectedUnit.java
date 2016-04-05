@@ -35,7 +35,7 @@ public class SelectedUnit extends AbstractProgramUnit {
   }
 
   private void ensureIsWildCard() {
-    if (!WILD_CARD.equals(getName())) {
+    if (!WILD_CARD.equals(getIdentifier())) {
       throw new RuntimeException("Not a wildcard unit");
     }
   }

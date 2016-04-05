@@ -25,7 +25,7 @@ public class ProgramUnitLocator implements UnitLocator {
   }
 
   @Override public List<Location> locate(ProgramUnit unit) {
-    track(unit.getName(), unit);
+    track(unit.getIdentifier(), unit);
 
     return unit.getLocations(context);
   }

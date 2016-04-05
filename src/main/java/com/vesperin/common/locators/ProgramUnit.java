@@ -12,7 +12,7 @@ public interface ProgramUnit {
   /**
    * @return the unit's name.
    */
-  String getName();
+  String getIdentifier();
 
   /**
    * Returns the list of locations where <strong>this</strong>
