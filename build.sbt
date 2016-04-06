@@ -31,7 +31,7 @@ assemblyMergeStrategy in assembly := {
   case x => MergeStrategy.first
 }
 
-assemblyJarName in assembly:= "mix.jar"
+assemblyJarName in assembly:= "mix-0.1-SNAPSHOT.jar"
 //target in assembly := file(".")
 
 test in assembly := {}
