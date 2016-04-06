@@ -1,5 +1,6 @@
 package com.vesperin.common.visitors;
 
+import com.vesperin.common.Scopes;
 import com.vesperin.common.spi.BindingRequest;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;

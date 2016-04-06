@@ -1,4 +1,4 @@
-package com.vesperin.common.visitors;
+package com.vesperin.common;
 
 import com.google.common.collect.Sets;
 import com.vesperin.common.spi.BindingRequest;
@@ -7,6 +7,9 @@ import com.vesperin.common.locations.Locations;
 import com.vesperin.common.requests.BindingRequestBySignature;
 import com.vesperin.common.requests.BindingRequestByValue;
 import com.vesperin.common.utils.Jdt;
+import com.vesperin.common.visitors.DeclarationsAfterVisitor;
+import com.vesperin.common.visitors.ScopeVisitor;
+import com.vesperin.common.visitors.StatementsSelectionVisitor;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.*;

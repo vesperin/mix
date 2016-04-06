@@ -2,7 +2,6 @@ package com.vesperin.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.vesperin.common.visitors.ScopeAnalyser;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.junit.Test;
 

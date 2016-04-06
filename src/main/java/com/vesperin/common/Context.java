@@ -12,7 +12,6 @@ import com.vesperin.common.locators.SelectedUnit;
 import com.vesperin.common.locators.UnitLocation;
 import com.vesperin.common.locators.UnitLocator;
 import com.vesperin.common.utils.Jdt;
-import com.vesperin.common.visitors.ScopeAnalyser;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;

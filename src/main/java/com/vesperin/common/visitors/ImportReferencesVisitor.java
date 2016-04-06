@@ -1,5 +1,7 @@
 package com.vesperin.common.visitors;
 
+import com.vesperin.common.ScopeAnalyser;
+import com.vesperin.common.Scopes;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
 import com.vesperin.common.utils.Jdt;

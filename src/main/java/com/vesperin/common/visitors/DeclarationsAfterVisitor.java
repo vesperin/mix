@@ -1,5 +1,6 @@
 package com.vesperin.common.visitors;
 
+import com.vesperin.common.Scopes;
 import com.vesperin.common.spi.BindingRequest;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;

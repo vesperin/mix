@@ -1,4 +1,4 @@
-package com.vesperin.common.visitors;
+package com.vesperin.common;
 
 import org.eclipse.jdt.core.dom.IBinding;
 
