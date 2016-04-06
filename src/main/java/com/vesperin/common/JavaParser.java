@@ -1,7 +1,7 @@
 package com.vesperin.common;
 
 import com.vesperin.common.matchers.ContextMatcher;
-import com.vesperin.common.utils.MatchMaker;
+import com.vesperin.common.matchers.MatchMaker;
 
 import java.util.Objects;
 

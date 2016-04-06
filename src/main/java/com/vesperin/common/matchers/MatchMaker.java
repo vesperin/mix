@@ -1,10 +1,9 @@
-package com.vesperin.common.utils;
+package com.vesperin.common.matchers;
 
 import com.google.common.collect.ImmutableList;
 import com.vesperin.common.Context;
 import com.vesperin.common.ParsedUnit;
-import com.vesperin.common.matchers.AbstractContextMatcher;
-import com.vesperin.common.matchers.ContextMatcher;
+import com.vesperin.common.utils.Jdt;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
