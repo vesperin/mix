@@ -2,8 +2,11 @@ package com.vesperin.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.vesperin.common.locations.Locations;
+import com.vesperin.common.visitors.ScopeAnalyser;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.junit.Test;
+
+import java.util.Set;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
@@ -20,6 +23,24 @@ public class JavaParserTest {
         "public class Foo {"
         , " public int exit(){"
         , "   return 1;"
+        , " }"
+        , "}"
+      )
+    )
+  );
+
+
+  static final Source SRC1 = Source.from("Foo",
+    Joiner.on("\n").join(
+      ImmutableList.of(
+        "public class Foo {"
+        , " private int code = 1; "
+        , " public int exit(){"
+        , "   return boo();"
+        , " }"
+        , " "
+        , " public int boo(){"
+        , "   return code;"
         , " }"
         , "}"
       )
@@ -44,16 +65,20 @@ public class JavaParserTest {
     }
   }
 
+  @Test public void testScopeAnalysis() throws Exception {
+    final Context context = new EclipseJavaParser().parseJava(SRC1);
+    final ScopeAnalyser analyser = context.getScopeAnalyser();
 
-  @Test public void testBasicLocator() throws Exception {
+    final Set<IBinding> universe = analyser.getUsedDeclarationsInScope(44, 81);
 
-    final JavaParser parser = new EclipseJavaParser();
+    assertThat(universe.size() > 0, is(true));
 
-    final Context parsedContext = parser.parseJava(SRC);
-    assertThat(parsedContext.locateClasses().size() == 1, is(true));
-    assertThat(parsedContext.locateFields().size() == 0, is(true));
-    assertThat(parsedContext.locateMethods().size() == 1, is(true));
-    assertThat(parsedContext.locateUnit(Locations.createLocation(SRC, SRC.getContent(), 31, 35)).size() == 1, is(true));
+//    for(IBinding each : universe){
+//      if(each.getKind() == IBinding.METHOD){
+//        final IMethodBinding methodBinding = (IMethodBinding) each;
+//        methodBinding.getDeclaringClass().getName().equals("Object");
+//      }
+//    }
 
   }
 }

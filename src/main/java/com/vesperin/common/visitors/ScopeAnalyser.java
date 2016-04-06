@@ -1,5 +1,6 @@
 package com.vesperin.common.visitors;
 
+import com.google.common.collect.Sets;
 import com.vesperin.common.spi.BindingRequest;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
@@ -229,10 +230,9 @@ public class ScopeAnalyser {
         }
       } else if (Scopes.isTypesFlagAvailable(flags)) {
         if (root.findDeclaringNode(binding) != null) {
-          List types= root.types();
-          for (Object type : types) {
-            if (request.accept(((AbstractTypeDeclaration) type)
-                .resolveBinding())) {
+          List<TypeDeclaration> types = Jdt.typeSafeList(TypeDeclaration.class, root.types());
+          for (TypeDeclaration type : types) {
+            if (request.accept(type.resolveBinding())) {
               return true;
             }
           }
@@ -576,15 +576,19 @@ public class ScopeAnalyser {
   /**
    * Gets the type binding of the node's parent type declaration.
    *
-   * @param node ASTNode object
+   * @param foundNode ASTNode object
    * @return the type binding of the node's parent type declaration
    */
-  public static ITypeBinding getBindingOfParentType(ASTNode node) {
+  public static ITypeBinding getBindingOfParentType(ASTNode foundNode) {
+    ASTNode node = foundNode;
     while (node != null) {
       if (node instanceof AbstractTypeDeclaration) {
         return ((AbstractTypeDeclaration) node).resolveBinding();
       } else if (node instanceof AnonymousClassDeclaration) {
         return ((AnonymousClassDeclaration) node).resolveBinding();
+      } else if (node instanceof CompilationUnit){
+        node = (TypeDeclaration) ((CompilationUnit) node).types().get(0);
+        continue;
       }
 
       node  = node.getParent();
@@ -665,6 +669,18 @@ public class ScopeAnalyser {
      root.accept(selector);
 
      return selector.getFirstSelectedNode();
+  }
+
+
+  public Set<IBinding> getUsedDeclarationsInScope(int offset, int endOffset){
+    final IBinding[] methods = getDeclarationsInScope(offset, endOffset, Scopes.METHODS);
+    final IBinding[] fields  = getDeclarationsInScope(offset, endOffset, Scopes.VARIABLES);
+    final IBinding[] types   = getDeclarationsInScope(offset, endOffset, Scopes.TYPES);
+
+    return Sets.union(
+      Sets.newHashSet(types),
+      Sets.union(Sets.newHashSet(methods), Sets.newHashSet(fields))
+    );
   }
 
 

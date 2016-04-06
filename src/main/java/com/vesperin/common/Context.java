@@ -12,6 +12,7 @@ import com.vesperin.common.locators.SelectedUnit;
 import com.vesperin.common.locators.UnitLocation;
 import com.vesperin.common.locators.UnitLocator;
 import com.vesperin.common.utils.Jdt;
+import com.vesperin.common.visitors.ScopeAnalyser;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -145,6 +146,12 @@ public class Context {
     return new ProgramUnitLocator(this);
   }
 
+  /**
+   * @return a new ScopeAnalyzer object.
+   */
+  public ScopeAnalyser getScopeAnalyser() {
+    return new ScopeAnalyser(getCompilationUnit());
+  }
 
   /**
    * @see {@link UnitLocator#locate(ProgramUnit)} for more information.
@@ -176,6 +183,20 @@ public class Context {
 
   /**
    * Determine what program unit is located at some source code location.
+   *
+   * @param start start offset
+   * @param end end offset
+   * @return the unit location
+   */
+  public List<UnitLocation> locateUnit(int start, int end){
+    return locateUnit(
+      Locations.createLocation(getSource(), getSourceContent(), start, end)
+    );
+  }
+
+  /**
+   * Determine what program unit is located at some source code location.
+   *
    * @param at a source code location.
    * @return the unit location
    */
