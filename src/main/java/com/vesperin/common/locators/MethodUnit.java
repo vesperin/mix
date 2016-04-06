@@ -3,7 +3,7 @@ package com.vesperin.common.locators;
 import com.google.common.base.Preconditions;
 import com.vesperin.common.Context;
 import com.vesperin.common.locations.Location;
-import com.vesperin.common.visitors.MethodDeclarations;
+import com.vesperin.common.visitors.MethodDeclarationVisitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
@@ -39,7 +39,7 @@ public class MethodUnit extends AbstractProgramUnit {
   }
 
   private static List<UnitLocation> findAll(Context context){
-    final MethodDeclarations visitor = new MethodDeclarations();
+    final MethodDeclarationVisitor visitor = new MethodDeclarationVisitor();
     context.accept(visitor);
 
     return visitor.getData().keySet().stream()

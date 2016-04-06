@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-public class FieldDeclarations extends SkeletalVisitor {
+public class FieldDeclarationVisitor extends SkeletalVisitor {
   final Map<Location, FieldDeclaration> data;
 
-  public FieldDeclarations() {
+  public FieldDeclarationVisitor() {
     this.data         = new HashMap<>();
   }
 

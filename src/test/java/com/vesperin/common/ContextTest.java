@@ -25,6 +25,17 @@ public class ContextTest {
     )
   );
 
+  static final Source SRC1 = Source.from("Foo",
+    Joiner.on("\n").join(
+      ImmutableList.of(
+        "public class Foo {"
+        , " public class Boo {"
+        , " }"
+        , "}"
+      )
+    )
+  );
+
   @Test public void testBasicLocator() throws Exception {
 
     final JavaParser parser = new EclipseJavaParser();
@@ -45,6 +56,16 @@ public class ContextTest {
     for( UnitLocation each : parsedContext.locateMethods()){
       assertThat(Locations.covers(parsedContext.getScope(), each), is(true));
     }
+  }
+
+
+  @Test public void testBasicLocators2() throws Exception {
+
+    final JavaParser parser = new EclipseJavaParser();
+
+    final Context parsedContext = parser.parseJava(SRC1);
+    assertThat(parsedContext.locateClasses().size() == 2, is(true));
+
   }
 
 

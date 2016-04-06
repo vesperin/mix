@@ -2,10 +2,8 @@ package com.vesperin.common.visitors;
 
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,16 +14,16 @@ import java.util.stream.Collectors;
 /**
  * @author Huascar Sanchez
  */
-public class MethodDeclarations extends SkeletalVisitor {
+public class MethodDeclarationVisitor extends SkeletalVisitor {
   final Set<String> targets;
   final Map<Location, MethodDeclaration> data;
 
 
-  public MethodDeclarations(){
+  public MethodDeclarationVisitor(){
     this(new HashSet<>());
   }
 
-  public MethodDeclarations(Set<String> targets) {
+  public MethodDeclarationVisitor(Set<String> targets) {
     this.targets      = targets;
     this.data         = new HashMap<>();
   }

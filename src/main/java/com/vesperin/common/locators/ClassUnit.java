@@ -4,11 +4,12 @@ import com.google.common.base.Preconditions;
 import com.vesperin.common.Context;
 import com.vesperin.common.locations.Location;
 import com.vesperin.common.locations.Locations;
-import com.vesperin.common.utils.Jdt;
+import com.vesperin.common.visitors.TypeDeclarationVisitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +43,10 @@ public class ClassUnit extends AbstractProgramUnit {
 
   private static List<UnitLocation> findAll(Context context){
 
-    final List<TypeDeclaration> types = Jdt.typeSafeList(TypeDeclaration.class, context.getCompilationUnit().types());
+    final TypeDeclarationVisitor visitor = new TypeDeclarationVisitor();
+    context.accept(visitor);
+
+    final Set<TypeDeclaration> types = visitor.getTypes();
 
     return types.stream()
       .map(each -> new ProgramUnitLocation(each, Locations.locate(each)))
