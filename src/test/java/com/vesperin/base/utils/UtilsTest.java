@@ -5,12 +5,17 @@ import com.google.common.collect.ImmutableList;
 import com.vesperin.base.Context;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.JavaParser;
+import com.vesperin.base.ScopeAnalyser;
 import com.vesperin.base.Source;
+import com.vesperin.base.locations.Locations;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.junit.Test;
 
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -49,7 +54,38 @@ public class UtilsTest {
 
   }
 
-  @Test public void testStringTemplating() throws Exception {
+  @Test public void testNodeRecoveryFromBinding() throws Exception {
+    final Source src = Source.from("Foo",
+      Joiner.on("\n").join(
+        ImmutableList.of(
+          "public class Foo {"
+          , " private int code = 1; "
+          , " public int exit(){"
+          , "   int x = Config.CODE;"
+          , "   return boo();"
+          , " }"
+          , " "
+          , " public int boo(){"
+          , "   System.out.println();"
+          , "   return code;"
+          , " }"
+          , " "
+          , " public static class Config {"
+          , "   static final int CODE = 1;"
+          , " }"
+          , "}"
+        )
+      )
+    );
 
+    final Context context = new EclipseJavaParser().parseJava(src);
+    final ScopeAnalyser analyser = context.getScopeAnalyser();
+
+    final Set<IBinding> bindings = analyser.getAllBindings(Locations.locate(context.getCompilationUnit()), context.getCompilationUnit());
+
+    for(IBinding each : bindings){
+      final ASTNode actualNode = Jdt.findASTNodeDeclaration(each, context.getCompilationUnit());
+      assertNotNull(actualNode);
+    }
   }
 }

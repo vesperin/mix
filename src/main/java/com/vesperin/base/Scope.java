@@ -5,8 +5,7 @@ import org.eclipse.jdt.core.dom.IBinding;
 /**
  * @author Huascar Sanchez
  */
-public class Scopes {
-
+public class Scope {
   public static final int METHODS             = 1;  // Specifies that methods should be reported.
   public static final int VARIABLES           = 2;  // Specifies that variables should be reported.
   public static final int TYPES               = 4;  // Specifies that types should be reported.
@@ -14,7 +13,7 @@ public class Scopes {
 
   public static final IBinding[] EMPTY_BINDINGS = new IBinding[0];
 
-  private Scopes(){
+  private Scope(){
     throw new Error("Utility class");
   }
 

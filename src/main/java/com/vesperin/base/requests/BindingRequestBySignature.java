@@ -1,7 +1,7 @@
 package com.vesperin.base.requests;
 
 import com.vesperin.base.spi.BindingRequest;
-import com.vesperin.base.Scopes;
+import com.vesperin.base.Scope;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
@@ -56,7 +56,7 @@ public class BindingRequestBySignature implements BindingRequest {
    * @return the list of requested-by-signature bindings.
    */
   public List<IBinding> getRequestedBindings() {
-    if (Scopes.isVisibilityFlagAvailable(flags)) {
+    if (Scope.isVisibilityFlagAvailable(flags)) {
       for (int i = requestedBindings.size() - 1; i >= 0; i--) {
         final IBinding binding = requestedBindings.get(i);
         if (!isVisible(binding, parentTypeBinding)) {

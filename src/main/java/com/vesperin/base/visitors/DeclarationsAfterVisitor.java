@@ -1,6 +1,6 @@
 package com.vesperin.base.visitors;
 
-import com.vesperin.base.Scopes;
+import com.vesperin.base.Scope;
 import com.vesperin.base.spi.BindingRequest;
 import org.eclipse.jdt.core.dom.*;
 
@@ -28,7 +28,7 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
   }
 
   @Override public boolean visit(VariableDeclaration node) {
-    if(Scopes.isVariablesFlagAvailable(flags) && position < node.getStartPosition()){
+    if(Scope.isVariablesFlagAvailable(flags) && position < node.getStartPosition()){
       stopTheWalk = request.accept(node.resolveBinding());
     }
 
@@ -36,7 +36,7 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
   }
 
   @Override public boolean visit(MethodInvocation node) {
-    if(Scopes.isMethodsFlagAvailable(flags) && position < node.getStartPosition()){
+    if(Scope.isMethodsFlagAvailable(flags) && position < node.getStartPosition()){
       stopTheWalk = request.accept(node.resolveMethodBinding());
     }
 
@@ -44,7 +44,7 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
   }
 
   @Override public boolean visit(VariableDeclarationFragment node) {
-    if(Scopes.isTypesFlagAvailable(flags) && position < node.getStartPosition()){
+    if(Scope.isTypesFlagAvailable(flags) && position < node.getStartPosition()){
       if(node.getInitializer() instanceof QualifiedName){
         final QualifiedName name = (QualifiedName) node.getInitializer();
         // If we encounter a name where its first char is an uppercase letter
@@ -60,12 +60,26 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
     return visit((VariableDeclaration) node);
   }
 
+  @Override public boolean visit(ReturnStatement node) {
+    if(Scope.isVariablesFlagAvailable(flags) && position < node.getStartPosition()){
+      if(node.getExpression() instanceof SimpleName){
+        stopTheWalk = request.accept(((SimpleName) node.getExpression()).resolveBinding());
+      }
+    } else if(Scope.isMethodsFlagAvailable(flags) && position < node.getStartPosition()){
+      if (node.getExpression() instanceof MethodInvocation){
+        stopTheWalk = request.accept(((MethodInvocation) node.getExpression()).resolveMethodBinding());
+      }
+    }
+
+    return stopTheWalk;
+  }
+
   @Override public boolean visit(AnonymousClassDeclaration node) {
     return false;
   }
 
   @Override public boolean visit(TypeDeclarationStatement node) {
-    if(Scopes.isTypesFlagAvailable(flags) && position < node.getStartPosition()){
+    if(Scope.isTypesFlagAvailable(flags) && position < node.getStartPosition()){
       stopTheWalk = request.accept(node.resolveBinding());
     }
 

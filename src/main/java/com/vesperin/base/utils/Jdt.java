@@ -57,10 +57,10 @@ public class Jdt {
   }
 
 
-  public static ASTNode findASTNodeDeclaration(IBinding binding, ASTNode root) {
-    root = root.getRoot();
-    if (root instanceof CompilationUnit) {
-      return CompilationUnit.class.cast(root).findDeclaringNode(binding);
+  public static ASTNode findASTNodeDeclaration(IBinding binding, ASTNode node) {
+    node = (node instanceof CompilationUnit) ? node.getRoot() : node;
+    if (node != null) {
+      return CompilationUnit.class.cast(node).findDeclaringNode(binding);
     }
 
     return null;

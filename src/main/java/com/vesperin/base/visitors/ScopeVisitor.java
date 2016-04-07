@@ -1,6 +1,6 @@
 package com.vesperin.base.visitors;
 
-import com.vesperin.base.Scopes;
+import com.vesperin.base.Scope;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.spi.BindingRequest;
@@ -58,7 +58,7 @@ public class ScopeVisitor extends ASTVisitorWithHierarchicalWalk {
 
 
   @Override public boolean visit(TypeParameter node) {
-    if (Scopes.isTypesFlagAvailable(flags)
+    if (Scope.isTypesFlagAvailable(flags)
         && node.getStartPosition() < scope.getStart().getOffset()) {
 
       breakStatement = request.accept(
@@ -71,7 +71,7 @@ public class ScopeVisitor extends ASTVisitorWithHierarchicalWalk {
 
   @Override public boolean visit(SwitchCase node) {
     // switch on enum allows to use enum constants without qualification
-    if (Scopes.isVariablesFlagAvailable(flags)
+    if (Scope.isVariablesFlagAvailable(flags)
         && !node.isDefault() && isInsideScope(node.getExpression(), scope)) {
 
       final ASTNode         nonNullParent   = Objects.requireNonNull(node.getParent());
@@ -114,7 +114,7 @@ public class ScopeVisitor extends ASTVisitorWithHierarchicalWalk {
   }
 
   public boolean visit(VariableDeclaration node) {
-    if (Scopes.isVariablesFlagAvailable(flags)
+    if (Scope.isVariablesFlagAvailable(flags)
         && node.getStartPosition() < scope.getStart().getOffset()) {
 
       breakStatement = request.accept(node.resolveBinding());
@@ -150,7 +150,7 @@ public class ScopeVisitor extends ASTVisitorWithHierarchicalWalk {
   }
 
   public boolean visit(TypeDeclarationStatement node) {
-    if (Scopes.isTypesFlagAvailable(flags)
+    if (Scope.isTypesFlagAvailable(flags)
         && node.getStartPosition() + node.getLength() < scope.getStart().getOffset()) {
 
       breakStatement = request.accept(node.resolveBinding());

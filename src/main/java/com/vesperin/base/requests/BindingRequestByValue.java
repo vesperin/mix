@@ -1,7 +1,7 @@
 package com.vesperin.base.requests;
 
 import com.vesperin.base.spi.BindingRequest;
-import com.vesperin.base.Scopes;
+import com.vesperin.base.Scope;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -46,7 +46,7 @@ public class BindingRequestByValue implements BindingRequest {
       return false;
     }
 
-    boolean checkVisibility = Scopes.isVisibilityFlagAvailable(flags);
+    boolean checkVisibility = Scope.isVisibilityFlagAvailable(flags);
     if (binding == bindingToSearch) {
       isBindingFound = true;
     } else {

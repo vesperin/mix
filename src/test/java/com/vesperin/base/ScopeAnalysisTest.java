@@ -99,23 +99,75 @@ public class ScopeAnalysisTest {
     final Context context = new EclipseJavaParser().parseJava(SRC);
     final ScopeAnalyser analyser = context.getScopeAnalyser();
 
-    final Set<IBinding> localUniverse = new HashSet<>();
-    final Set<IBinding> universe = new HashSet<>();
+    final Set<IBinding> a = new HashSet<>();
+    final Set<IBinding> b = new HashSet<>();
 
-    for(UnitLocation each : context.locateMethods()){
-      localUniverse.addAll(analyser.getUsedLocalDeclarationsInScope(each));
-      universe.addAll(analyser.getUsedDeclarationsInScope(each));
+    final Set<IBinding> c = new HashSet<>();
+    final Set<IBinding> d = new HashSet<>();
+
+    final UnitLocation methodOne  = context.locateMethods().get(0);
+    final UnitLocation methodTwo  = context.locateMethods().get(1);
+
+    // method one
+    a.addAll(analyser.getUsedLocalDeclarationsInScope(methodOne));
+    assertLocalBindings(a, methodOne);
+
+    b.addAll(analyser.getAllBindings(methodOne, methodOne.getUnitNode()));
+    assertBindingUniverse(b, methodOne);
+
+
+    // method two
+    c.addAll(analyser.getUsedLocalDeclarationsInScope(methodTwo));
+    assertLocalBindings(c, methodTwo);
+
+    d.addAll(analyser.getAllBindings(methodTwo, methodTwo.getUnitNode()));
+    assertBindingUniverse(d, methodTwo);
+
+    // General assertions
+    assertThat(!a.isEmpty(), is(true));
+    assertThat(!b.isEmpty(), is(true));
+    assertThat(!c.isEmpty(), is(true));
+    assertThat(!d.isEmpty(), is(true));
+    assertThat(b.size() > a.size(), is(true));
+    assertThat(d.size() > c.size(), is(true));
+
+  }
+
+
+  private void assertLocalBindings(Set<IBinding> bindings, UnitLocation unitLocation) {
+    if(isExitMethod(unitLocation)){
+      final Set<String> expected = Sets.newHashSet("exit", "x", "Config", "boo");
+
+      for(IBinding each : bindings){
+        assertThat(expected.contains(each.getName()), is(true));
+      }
+    } else if (isBooMethod(unitLocation)){
+      final Set<String> expected = Sets.newHashSet("boo", "code", "println");
+
+      for(IBinding each : bindings){
+        assertThat(expected.contains(each.getName()), is(true));
+      }
     }
-
-    assertThat(!localUniverse.isEmpty(), is(true));
-    assertThat(!universe.isEmpty(), is(true));
+  }
 
 
-    assertThat(universe.size() >= localUniverse.size(), is(true));
+  private void assertBindingUniverse(Set<IBinding> a, UnitLocation unitLocation) {
+    if(isBooMethod(unitLocation) || isExitMethod(unitLocation)){
+      // {exit(m), x(var), Config(c), boo(m), code(f), println(m)}
+      final Set<String> expected = Sets.newHashSet("exit", "Config", "boo", "code", "Foo");
 
-    final Set<IBinding> intersection = Sets.intersection(localUniverse, universe);
-    assertThat(!intersection.isEmpty(), is(true));
+      for(IBinding each : a){
+        assertThat(expected.contains(each.getName()), is(true));
+      }
+    }
+  }
 
+  private static boolean isExitMethod(UnitLocation e){
+    return ((MethodDeclaration)e.getUnitNode()).getName().getIdentifier().equals("exit");
+  }
+
+  private static boolean isBooMethod(UnitLocation e){
+    return ((MethodDeclaration)e.getUnitNode()).getName().getIdentifier().equals("boo");
   }
 
   @Test public void testScopeAnalysisLocal() throws Exception {
@@ -174,8 +226,8 @@ public class ScopeAnalysisTest {
     assertThat(m0.isPresent(), is(true));
     assertThat(m1.isPresent(), is(true));
 
-    a.addAll(analyser0.getUsedDeclarationsInScope(m0.get()).stream().map(IBinding::getKey).collect(Collectors.toList()));
-    b.addAll(analyser1.getUsedDeclarationsInScope(m1.get()).stream().map(IBinding::getKey).collect(Collectors.toList()));
+    a.addAll(analyser0.getDeclarationsWithinScope(m0.get()).stream().map(IBinding::getKey).collect(Collectors.toList()));
+    b.addAll(analyser1.getDeclarationsWithinScope(m1.get()).stream().map(IBinding::getKey).collect(Collectors.toList()));
 
     final Set<String> intersection = Sets.intersection(a, b);
     assertThat(!intersection.isEmpty(), is(true));

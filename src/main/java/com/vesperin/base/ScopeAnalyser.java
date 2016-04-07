@@ -174,7 +174,7 @@ public class ScopeAnalyser {
   }
 
   private static boolean collectTypeBindings(ITypeBinding binding, int flags, BindingRequest request) {
-    if (Scopes.isTypesFlagAvailable(flags)) {
+    if (Scope.isTypesFlagAvailable(flags)) {
       final ITypeBinding[] typeBindings = binding.getDeclaredTypes();
       for (ITypeBinding eachTypeBinding : typeBindings) {
         if (request.accept(eachTypeBinding))
@@ -185,7 +185,7 @@ public class ScopeAnalyser {
   }
 
   private static boolean collectMethodBindings(ITypeBinding binding, int flags, BindingRequest request) {
-    if (Scopes.isMethodsFlagAvailable(flags)) {
+    if (Scope.isMethodsFlagAvailable(flags)) {
       final IMethodBinding[] methodBindings = binding.getDeclaredMethods();
       for (IMethodBinding eachMethodBindings : methodBindings) {
         if (!eachMethodBindings.isSynthetic() && !eachMethodBindings.isConstructor()) {
@@ -198,7 +198,7 @@ public class ScopeAnalyser {
   }
 
   private static boolean collectVariableBindings(ITypeBinding binding, int flags, BindingRequest request) {
-    if (Scopes.isVariablesFlagAvailable(flags)) {
+    if (Scope.isVariablesFlagAvailable(flags)) {
       final IVariableBinding[] variableBindings = binding.getDeclaredFields();
       for (IVariableBinding eachVariableBinding : variableBindings) {
         if (request.accept(eachVariableBinding))
@@ -219,7 +219,7 @@ public class ScopeAnalyser {
    * @return return <code>true</code> if the request has reported the binding as found and no further results are required
    */
   private boolean collectTypeDeclarations(ITypeBinding binding, int flags, BindingRequest request) {
-    if (Scopes.isTypesFlagAvailable(flags) && !binding.isAnonymous()) {
+    if (Scope.isTypesFlagAvailable(flags) && !binding.isAnonymous()) {
       if (request.accept(binding)) {
         return true;
       }
@@ -242,7 +242,7 @@ public class ScopeAnalyser {
         if (collectTypeDeclarations(declaringClass, flags, request)) { // Recursively add inherited
           return true;
         }
-      } else if (Scopes.isTypesFlagAvailable(flags)) {
+      } else if (Scope.isTypesFlagAvailable(flags)) {
         if (root.findDeclaringNode(binding) != null) {
           List<TypeDeclaration> types = Jdt.typeSafeList(TypeDeclaration.class, root.types());
           for (TypeDeclaration type : types) {
@@ -422,7 +422,7 @@ public class ScopeAnalyser {
 
 
   private boolean collectLocalDeclarations(ASTNode node, Location location, int flags, BindingRequest request) {
-    if (Scopes.isVariablesFlagAvailable(flags) || Scopes.isTypesFlagAvailable(flags)) {
+    if (Scope.isVariablesFlagAvailable(flags) || Scope.isTypesFlagAvailable(flags)) {
       final BodyDeclaration declaration = findParentBodyDeclaration(node);
       if (declaration instanceof MethodDeclaration || declaration instanceof Initializer) {
         final ScopeVisitor visitor = new ScopeVisitor(location, flags, request);
@@ -495,7 +495,7 @@ public class ScopeAnalyser {
     final ASTNode node = selectNodeWithinRange(root, location);
 
     if (node == null) {
-      return Scopes.EMPTY_BINDINGS;
+      return Scope.EMPTY_BINDINGS;
     }
 
     if (node instanceof SimpleName) {
@@ -506,7 +506,7 @@ public class ScopeAnalyser {
     if ((node instanceof MethodDeclaration) || ((node instanceof Statement))) {
 
       // include the enclosing unit
-      if((node instanceof MethodDeclaration) && Scopes.isMethodsFlagAvailable(flags)){
+      if((node instanceof MethodDeclaration) && Scope.isMethodsFlagAvailable(flags)){
         final IMethodBinding methodBinding = ((MethodDeclaration) node).resolveBinding();
         bindingsInMethod.add(methodBinding);
 
@@ -519,20 +519,32 @@ public class ScopeAnalyser {
       return bindingsInMethod.toArray(new IBinding[bindingsInMethod.size()]);
 
     } else if (node instanceof CompilationUnit){
-      return getDeclarationsInUnit(location, flags, node);
+      return getDeclarationsInCompilationUnit(location, flags, node);
     }
 
-    return new IBinding[0];
+    return Scope.EMPTY_BINDINGS;
   }
 
+  public Set<IBinding> getAllBindings(Location location, ASTNode node) {
+    final Set<IBinding> a = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.VARIABLES, node)).stream()
+      .filter(onlyLocalVars(location.getSource().getName())).collect(Collectors.toSet());
 
+    final Set<IBinding> b = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.METHODS, node)).stream()
+      .filter(onlyLocalMethods()).collect(Collectors.toSet());
 
-  public IBinding[] getDeclarationsInUnit(Location location, int flags, ASTNode node) {
+    final Set<IBinding> c = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.TYPES, node)).stream()
+      .filter(onlyLocalInnerTypes()).collect(Collectors.toSet());
+
+    return Sets.union(Sets.union(a, b), c);
+  }
+
+  public IBinding[] getDeclarationsInCompilationUnit(Location location, int flags, ASTNode node) {
     try {
       final ITypeBinding binding = getBindingOfParentType(node);
       final BindingRequestBySignature request = new BindingRequestBySignature(binding, flags);
 
       collectLocalDeclarations(node, location, flags, request);
+
 
       if (binding != null) {
         collectTypeDeclarations(binding, flags, request);
@@ -647,13 +659,13 @@ public class ScopeAnalyser {
   public Collection<String> getUsedFieldNames(Location offset) {
     final Set<String> result = new HashSet<>();
 
-    final IBinding[] bindingsBefore = getDeclarationsInScope(offset, Scopes.VARIABLES);
+    final IBinding[] bindingsBefore = getDeclarationsInScope(offset, Scope.VARIABLES);
 
     for (IBinding eachBindingBefore : bindingsBefore) {
       result.add(eachBindingBefore.getName());
     }
 
-    final IBinding[] bindingsAfter = getUsedFieldDeclarations(offset, Scopes.VARIABLES);
+    final IBinding[] bindingsAfter = getUsedFieldDeclarations(offset, Scope.VARIABLES);
 
     for (IBinding eachBindingAfter : bindingsAfter) {
       result.add(eachBindingAfter.getName());
@@ -687,7 +699,7 @@ public class ScopeAnalyser {
       final ASTNode node = selectNodeWithinRange(root, location);
 
       if (node == null) {
-        return Scopes.EMPTY_BINDINGS;
+        return Scope.EMPTY_BINDINGS;
       }
 
       final List<IBinding> bindings = getFieldDeclarations(node, flags);
@@ -736,43 +748,43 @@ public class ScopeAnalyser {
     return declaringClass.getName();
   }
 
-  private static Predicate<IBinding> onlyLocalMethods(String localClassName){
-    return p -> localClassName.equals(ensureNonNullName(((IMethodBinding) p).getDeclaringClass()));
+  private static Predicate<IBinding> onlyLocalMethods(){
+    return p -> !"Object".equals(ensureNonNullName(((IMethodBinding) p).getDeclaringClass()));
   }
 
   private static Predicate<IBinding> onlyLocalVars(String localClassName){
-    return p -> localClassName.equals(ensureNonNullClassName(((IVariableBinding) p), localClassName));
+    return p -> !"Object".equals(ensureNonNullClassName(((IVariableBinding) p), localClassName));
   }
 
-  private static Predicate<IBinding> onlyLocalInnerTypes(String localClassName){
-    return p -> localClassName.equals(ensureNonNullName(((ITypeBinding) p).getDeclaringClass()));
+  private static Predicate<IBinding> onlyLocalInnerTypes(){
+    return p -> !"Object".equals(ensureNonNullName(((ITypeBinding) p).getDeclaringClass()));
   }
 
   public Set<IBinding> getUsedLocalDeclarationsInScope(Location scope){
-    return getUsedDeclarationsInScope(scope, true);
+    return getDeclarationsWithinScope(scope, true);
   }
 
-  public Set<IBinding> getUsedDeclarationsInScope(Location scope) {
-    return getUsedDeclarationsInScope(scope, false);
+  public Set<IBinding> getDeclarationsWithinScope(Location scope) {
+    return getDeclarationsWithinScope(scope, false);
   }
 
 
-  public Set<IBinding> getUsedDeclarationsInScope(Location scope, boolean onlyLocalDeclarations) {
+  public Set<IBinding> getDeclarationsWithinScope(Location scope, boolean onlyLocalDeclarations) {
     final Predicate<IBinding> all = p -> true;
 
-    final Set<IBinding> methods = Sets.newHashSet(getDeclarationsInScope(scope, Scopes.METHODS))
+    final Set<IBinding> methods = Sets.newHashSet(getDeclarationsInScope(scope, Scope.METHODS))
       .stream()
-      .filter(onlyLocalDeclarations ? onlyLocalMethods(scope.getSource().getName()) : all)
+      .filter(onlyLocalDeclarations ? onlyLocalMethods() : all)
       .collect(Collectors.toSet());
 
-    final Set<IBinding> fields = Sets.newHashSet(getDeclarationsInScope(scope, Scopes.VARIABLES))
+    final Set<IBinding> fields = Sets.newHashSet(getDeclarationsInScope(scope, Scope.VARIABLES))
       .stream()
       .filter(onlyLocalDeclarations ? onlyLocalVars(scope.getSource().getName()) : all)
       .collect(Collectors.toSet());
 
-    final Set<IBinding> types = Sets.newHashSet(getDeclarationsInScope(scope, Scopes.TYPES))
+    final Set<IBinding> types = Sets.newHashSet(getDeclarationsInScope(scope, Scope.TYPES))
       .stream()
-      .filter(onlyLocalDeclarations ? onlyLocalInnerTypes(scope.getSource().getName()) : all)
+      .filter(onlyLocalDeclarations ? onlyLocalInnerTypes() : all)
       .collect(Collectors.toSet());
 
     return Sets.union(types, Sets.union(methods, fields));

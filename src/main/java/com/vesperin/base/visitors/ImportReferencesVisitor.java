@@ -1,7 +1,7 @@
 package com.vesperin.base.visitors;
 
 import com.vesperin.base.ScopeAnalyser;
-import com.vesperin.base.Scopes;
+import com.vesperin.base.Scope;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.utils.Jdt;
@@ -138,7 +138,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
           final ScopeAnalyser scope                     = new ScopeAnalyser(root);
           final boolean       isVariableDeclaredInScope  = scope.isElementDeclaredInScope(
               variableBinding, (SimpleName) name,
-              Scopes.VARIABLES | Scopes.CHECK_VISIBILITY
+              Scope.VARIABLES | Scope.CHECK_VISIBILITY
           );
 
           if (isVariableDeclaredInScope) {
@@ -157,7 +157,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
 
         final boolean isMethodDeclaredInScope  = scope.isElementDeclaredInScope(
             methodBinding, (SimpleName) name,
-            Scopes.METHODS | Scopes.CHECK_VISIBILITY
+            Scope.METHODS | Scope.CHECK_VISIBILITY
         );
 
         if (isMethodDeclaredInScope) {
