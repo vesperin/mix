@@ -44,3 +44,12 @@ libraryDependencies ++= Seq(
     "junit" % "junit" % "4.12",
     "org.mockito" % "mockito-core" % "1.10.19"
 )
+
+assemblyExcludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
+  val excludes = Set(
+    "mockito-core-1.10.19.jar",
+    "junit-4.12.jar",
+    "junit-interface-0.11.jar"
+  )
+  cp filter { jar => excludes(jar.data.getName) }
+}

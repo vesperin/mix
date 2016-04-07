@@ -1,9 +1,9 @@
 package com.vesperin.base.locators;
 
-import com.google.common.base.Preconditions;
 import com.vesperin.base.Context;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Huascar Sanchez
@@ -35,8 +35,8 @@ public class ProgramUnitLocator implements UnitLocator {
   }
 
   private void track(String key, ProgramUnit hint) {
-    record.key = Preconditions.checkNotNull(key);
-    record.hint = Preconditions.checkNotNull(hint);
+    record.key  = Objects.requireNonNull(key);
+    record.hint = Objects.requireNonNull(hint);
   }
 
   @Override public String toString() {

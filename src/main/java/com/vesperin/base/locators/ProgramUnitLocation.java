@@ -1,6 +1,5 @@
 package com.vesperin.base.locators;
 
-import com.google.common.base.Preconditions;
 import com.vesperin.base.Source;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Position;
@@ -10,6 +9,8 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+
+import java.util.Objects;
 
 /**
  * @author Huascar Sanchez
@@ -32,8 +33,8 @@ public class ProgramUnitLocation implements UnitLocation {
    * @param location the location of this ASTNode.
    */
   public ProgramUnitLocation(ASTNode node, Location location) {
-    this.node = Preconditions.checkNotNull(node);
-    this.location = Preconditions.checkNotNull(location);
+    this.node     = Objects.requireNonNull(node);
+    this.location = Objects.requireNonNull(location);
   }
 
   private static String nameUnit(ASTNode node) {

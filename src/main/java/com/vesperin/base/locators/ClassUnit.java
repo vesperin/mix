@@ -1,6 +1,5 @@
 package com.vesperin.base.locators;
 
-import com.google.common.base.Preconditions;
 import com.vesperin.base.Context;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
@@ -9,6 +8,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,7 +36,7 @@ public class ClassUnit extends AbstractProgramUnit {
 
   @Override public List<UnitLocation> getLocations(Context context) {
 
-    Preconditions.checkNotNull(context);
+    Objects.requireNonNull(context);
 
     return (!getIdentifier().equals("all")) ? findLocationsByIdentifier(context) : findAll(context);
   }

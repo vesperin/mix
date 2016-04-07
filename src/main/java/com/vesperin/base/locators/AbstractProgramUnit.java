@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Huascar Sanchez
@@ -48,7 +49,7 @@ abstract class AbstractProgramUnit implements ProgramUnit {
 
 
   protected List<UnitLocation> findLocationsByIdentifier(Context parsedContext){
-    Preconditions.checkNotNull(parsedContext);
+    Objects.requireNonNull(parsedContext);
 
     final List<UnitLocation> locations = new ArrayList<>();
     final List<Location> instances = Locations.locateWord(parsedContext.getSource(), getIdentifier());

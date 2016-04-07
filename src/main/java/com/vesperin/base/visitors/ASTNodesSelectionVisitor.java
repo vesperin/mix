@@ -1,6 +1,5 @@
 package com.vesperin.base.visitors;
 
-import com.google.common.base.Preconditions;
 import com.vesperin.base.Source;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
@@ -9,6 +8,7 @@ import org.eclipse.jdt.core.dom.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Huascar Sanchez
@@ -161,7 +161,7 @@ public abstract class ASTNodesSelectionVisitor extends SkeletalVisitor {
 
 
   protected boolean handleSelectionEndsIn(ASTNode node) {
-    Preconditions.checkNotNull(node);
+    Objects.requireNonNull(node);
     return false;
   }
 }
