@@ -2,10 +2,7 @@ package com.vesperin.common.visitors;
 
 import com.vesperin.common.Scopes;
 import com.vesperin.common.spi.BindingRequest;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.*;
 
 /**
  * @author Huascar Sanchez
@@ -35,7 +32,32 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
       stopTheWalk = request.accept(node.resolveBinding());
     }
 
-    return false;
+    return stopTheWalk;
+  }
+
+  @Override public boolean visit(MethodInvocation node) {
+    if(Scopes.isMethodsFlagAvailable(flags) && position < node.getStartPosition()){
+      stopTheWalk = request.accept(node.resolveMethodBinding());
+    }
+
+    return stopTheWalk;
+  }
+
+  @Override public boolean visit(VariableDeclarationFragment node) {
+    if(Scopes.isTypesFlagAvailable(flags) && position < node.getStartPosition()){
+      if(node.getInitializer() instanceof QualifiedName){
+        final QualifiedName name = (QualifiedName) node.getInitializer();
+        // If we encounter a name where its first char is an uppercase letter
+        // then we can assume the name is the name of a class.
+        if(Character.isUpperCase(name.getName().getIdentifier().charAt(0))){
+          stopTheWalk = request.accept(name.getQualifier().resolveBinding());
+        }
+      }
+    }
+
+
+
+    return visit((VariableDeclaration) node);
   }
 
   @Override public boolean visit(AnonymousClassDeclaration node) {
@@ -47,7 +69,7 @@ public class DeclarationsAfterVisitor extends ASTVisitorWithHierarchicalWalk {
       stopTheWalk = request.accept(node.resolveBinding());
     }
 
-    return false;
+    return stopTheWalk;
   }
 
 }
