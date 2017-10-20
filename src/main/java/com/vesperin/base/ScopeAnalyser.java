@@ -1,18 +1,20 @@
 package com.vesperin.base;
 
-import com.google.common.collect.Sets;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.requests.BindingRequestBySignature;
 import com.vesperin.base.requests.BindingRequestByValue;
 import com.vesperin.base.spi.BindingRequest;
+import com.vesperin.base.utils.Immutable;
 import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.utils.Sets;
 import com.vesperin.base.visitors.DeclarationsAfterVisitor;
 import com.vesperin.base.visitors.ScopeVisitor;
 import com.vesperin.base.visitors.StatementsSelectionVisitor;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -526,14 +528,27 @@ public class ScopeAnalyser {
   }
 
   public Set<IBinding> getAllBindings(Location location, ASTNode node) {
-    final Set<IBinding> a = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.VARIABLES, node)).stream()
-      .filter(onlyLocalVars(location.getSource().getName())).collect(Collectors.toSet());
 
-    final Set<IBinding> b = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.METHODS, node)).stream()
-      .filter(onlyLocalMethods()).collect(Collectors.toSet());
+    final Set<IBinding> a = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.VARIABLES, node))
+          .filter((onlyLocalVars(location.getSource().getName())))
+      )
+    );
 
-    final Set<IBinding> c = Sets.newHashSet(getDeclarationsInCompilationUnit(location, Scope.TYPES, node)).stream()
-      .filter(onlyLocalInnerTypes()).collect(Collectors.toSet());
+    final Set<IBinding> b = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.METHODS, node))
+          .filter((onlyLocalMethods()))
+      )
+    );
+
+    final Set<IBinding> c = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.TYPES, node))
+          .filter((onlyLocalInnerTypes()))
+      )
+    );
 
     return Sets.union(Sets.union(a, b), c);
   }
@@ -772,20 +787,28 @@ public class ScopeAnalyser {
   public Set<IBinding> getDeclarationsWithinScope(Location scope, boolean onlyLocalDeclarations) {
     final Predicate<IBinding> all = p -> true;
 
-    final Set<IBinding> methods = Sets.newHashSet(getDeclarationsInScope(scope, Scope.METHODS))
-      .stream()
-      .filter(onlyLocalDeclarations ? onlyLocalMethods() : all)
-      .collect(Collectors.toSet());
 
-    final Set<IBinding> fields = Sets.newHashSet(getDeclarationsInScope(scope, Scope.VARIABLES))
-      .stream()
-      .filter(onlyLocalDeclarations ? onlyLocalVars(scope.getSource().getName()) : all)
-      .collect(Collectors.toSet());
+    final Set<IBinding> methods = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInScope(scope, Scope.METHODS))
+          .filter((onlyLocalDeclarations ? onlyLocalMethods() : all))
+      )
+    );
 
-    final Set<IBinding> types = Sets.newHashSet(getDeclarationsInScope(scope, Scope.TYPES))
-      .stream()
-      .filter(onlyLocalDeclarations ? onlyLocalInnerTypes() : all)
-      .collect(Collectors.toSet());
+    final Set<IBinding> fields = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInScope(scope, Scope.VARIABLES))
+          .filter((onlyLocalDeclarations ? onlyLocalVars(scope.getSource().getName()) : all))
+      )
+    );
+
+    final Set<IBinding> types = new HashSet<>(
+      Immutable.setOf(
+        Arrays.stream(getDeclarationsInScope(scope, Scope.TYPES))
+          .filter((onlyLocalDeclarations ? onlyLocalInnerTypes() : all))
+      )
+    );
+
 
     return Sets.union(types, Sets.union(methods, fields));
   }

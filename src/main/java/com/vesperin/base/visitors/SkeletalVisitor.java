@@ -5,7 +5,7 @@ import org.eclipse.jdt.core.dom.*;
 /**
  * Skeletal implementation of ASTVisitor to enforce certain ground rules
  * that will govern its use:
- *
+ * <p>
  * - all visit methods will invoke the default {@link SkeletalVisitor#visitNode(ASTNode)}
  * - all endVisitNode methods will invoke the default {@link SkeletalVisitor#endVisitNode(ASTNode)}
  *
@@ -16,7 +16,7 @@ public class SkeletalVisitor extends ASTVisitor {
    * Instantiates a new {@code SkeletalVisitor}, which won't visit
    * {@code JavaDoc} tags.
    */
-  public SkeletalVisitor(){
+  public SkeletalVisitor() {
     this(false);
   }
 

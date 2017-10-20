@@ -1,8 +1,9 @@
 package com.vesperin.base;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import com.vesperin.base.utils.Immutable;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -12,14 +13,14 @@ import static org.junit.Assert.fail;
  */
 public class JavaParserTest {
   static final Source SRC = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " public int exit(){"
         , "   return 1;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 

@@ -1,14 +1,17 @@
 package com.vesperin.base;
 
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+import com.vesperin.base.utils.Expect;
+import com.vesperin.base.utils.Immutable;
 import com.vesperin.base.utils.SourceFormat;
 import com.vesperin.base.utils.StringTemplate;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -141,15 +144,33 @@ public class Source {
     final Matcher matcher = pattern.matcher(fromContent);
 
     if(matcher.find()){
-      final String line = fromContent.substring(matcher.start(), matcher.end());
-      final Iterable<String> chunks = Splitter.on(" ").trimResults().split(line);
-      final int targetIndex = Iterables.indexOf(chunks, Predicates.containsPattern("class")) + 1;
 
-      return Iterables.get(chunks, targetIndex);
+      final String line = fromContent.substring(matcher.start(), matcher.end());
+      final List<String> chunks = Immutable.listOf(Arrays.stream(line.split(" ")).map(String::trim));
+      final int targetIndex = indexOf(chunks, Pattern.compile("class").asPredicate()) + 1;
+
+      return chunks.get(targetIndex);
     }
 
 
     throw new NoSuchElementException("Error: Name not found");
+  }
+
+  public static <T> int indexOf(Iterable<T> iterable, Predicate<? super T> predicate) {
+    Expect.nonNull(iterable);
+    Expect.nonNull(predicate);
+
+    final Iterator<T> iterator = iterable.iterator();
+
+    for (int idx = 0; iterator.hasNext(); idx++) {
+      final T currentElement = iterator.next();
+
+      if (predicate.test(currentElement)) {
+        return idx;
+      }
+    }
+
+    return -1; // nothing found
   }
 
   @Override public String toString() {

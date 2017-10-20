@@ -1,14 +1,14 @@
 package com.vesperin.base;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.vesperin.base.locators.UnitLocation;
+import com.vesperin.base.utils.Immutable;
+import com.vesperin.base.utils.Sets;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -23,8 +23,8 @@ import static org.junit.Assert.assertThat;
  */
 public class ScopeAnalysisTest {
   static final Source SRC = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " private int code = 1; "
         , " public int exit(){"
@@ -41,14 +41,14 @@ public class ScopeAnalysisTest {
         , "   static final int CODE = 1;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
 
   static final Source SRC2 = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " private int code = 1; "
         , " public int exit(){"
@@ -61,13 +61,13 @@ public class ScopeAnalysisTest {
         , "   return code;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
   static final Source SRC3 = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " private int code = 1; "
         , " public int exit(){"
@@ -77,13 +77,13 @@ public class ScopeAnalysisTest {
         , "   return x;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
   static final Source SRC4 = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " private int code = 1; "
         , " public int exit(){"
@@ -91,7 +91,7 @@ public class ScopeAnalysisTest {
         , "   return x;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
@@ -136,13 +136,13 @@ public class ScopeAnalysisTest {
 
   private void assertLocalBindings(Set<IBinding> bindings, UnitLocation unitLocation) {
     if(isExitMethod(unitLocation)){
-      final Set<String> expected = Sets.newHashSet("exit", "x", "Config", "boo");
+      final Set<String> expected = new HashSet<>(Arrays.asList("exit", "x", "Config", "boo"));
 
       for(IBinding each : bindings){
         assertThat(expected.contains(each.getName()), is(true));
       }
     } else if (isBooMethod(unitLocation)){
-      final Set<String> expected = Sets.newHashSet("boo", "code", "println");
+      final Set<String> expected = new HashSet<>(Arrays.asList("boo", "code", "println"));
 
       for(IBinding each : bindings){
         assertThat(expected.contains(each.getName()), is(true));
@@ -154,7 +154,7 @@ public class ScopeAnalysisTest {
   private void assertBindingUniverse(Set<IBinding> a, UnitLocation unitLocation) {
     if(isBooMethod(unitLocation) || isExitMethod(unitLocation)){
       // {exit(m), x(var), Config(c), boo(m), code(f), println(m)}
-      final Set<String> expected = Sets.newHashSet("exit", "Config", "boo", "code", "Foo");
+      final Set<String> expected = new HashSet<>(Arrays.asList("exit", "Config", "boo", "code", "Foo"));
 
       for(IBinding each : a){
         assertThat(expected.contains(each.getName()), is(true));

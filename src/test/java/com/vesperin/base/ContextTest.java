@@ -1,10 +1,11 @@
 package com.vesperin.base;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.locators.UnitLocation;
+import com.vesperin.base.utils.Immutable;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -14,25 +15,25 @@ import static org.junit.Assert.assertThat;
  */
 public class ContextTest {
   static final Source SRC = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " public int exit(){"
         , "   return 1;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
   static final Source SRC1 = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " public class Boo {"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 

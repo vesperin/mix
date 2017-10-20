@@ -1,7 +1,5 @@
 package com.vesperin.base.utils;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.vesperin.base.Context;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.JavaParser;
@@ -12,6 +10,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -23,14 +22,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class UtilsTest {
   static final Source SRC = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , "  public List<String> exit() {"
         , "    return new ArrayList<>();"
         , "  }"
         , "}"
-      )
+      ))
     )
   );
 
@@ -56,8 +55,8 @@ public class UtilsTest {
 
   @Test public void testNodeRecoveryFromBinding() throws Exception {
     final Source src = Source.from("Foo",
-      Joiner.on("\n").join(
-        ImmutableList.of(
+      String.join("\n",
+        Immutable.listOf(Arrays.asList(
           "public class Foo {"
           , " private int code = 1; "
           , " public int exit(){"
@@ -74,7 +73,7 @@ public class UtilsTest {
           , "   static final int CODE = 1;"
           , " }"
           , "}"
-        )
+        ))
       )
     );
 

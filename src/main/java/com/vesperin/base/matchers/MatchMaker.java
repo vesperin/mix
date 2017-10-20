@@ -1,13 +1,14 @@
 package com.vesperin.base.matchers;
 
-import com.google.common.collect.ImmutableList;
 import com.vesperin.base.Context;
 import com.vesperin.base.ParsedUnit;
+import com.vesperin.base.utils.Immutable;
 import com.vesperin.base.utils.Jdt;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,11 +23,14 @@ public class MatchMaker {
   }
 
   public static List<ContextMatcher> generateUnitMatchers(){
-    return ImmutableList.of(
-        new ValidCompilationUnitMatching(),
-        new MissingClassDeclaration(),
-        new MissingClassAndMethodBodyDeclarations()
+
+    final List<ContextMatcher> safeList = Arrays.asList(
+      new ValidCompilationUnitMatching(),
+      new MissingClassDeclaration(),
+      new MissingClassAndMethodBodyDeclarations()
     );
+
+    return Immutable.listOf(safeList);
   }
 
   static class ValidCompilationUnitMatching extends AbstractContextMatcher {

@@ -1,10 +1,10 @@
 package com.vesperin.base.locators;
 
-import com.google.common.collect.Lists;
 import com.vesperin.base.Context;
 import com.vesperin.base.locations.Location;
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +27,7 @@ public class SelectedUnit extends AbstractProgramUnit {
   @Override public List<UnitLocation> getLocations(Context context) {
     ensureIsWildCard();
 
-    final List<UnitLocation> locations = Lists.newArrayList();
+    final List<UnitLocation> locations = new ArrayList<>();
 
     addLocations(context, locations, selection);
 
