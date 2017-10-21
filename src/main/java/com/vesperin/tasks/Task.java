@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * @author Huascar Sanchez
  */
-abstract class Task {
+public abstract class Task {
   private final String name;
 
   final List<Task> firstToFinish              = new ArrayList<>();
@@ -26,7 +26,7 @@ abstract class Task {
    *
    * @param name the name of the task object.
    */
-  Task(String name){
+  public Task(String name){
     this.name = name;
   }
 
@@ -36,7 +36,7 @@ abstract class Task {
    * @param prerequisite the pre requisite task.
    * @return self
    */
-  Task after(Task prerequisite){
+  public Task after(Task prerequisite){
     firstToFinish.add(Objects.requireNonNull(prerequisite));
     return this;
   }
@@ -47,7 +47,7 @@ abstract class Task {
    * @param prerequisites the collection of pre requisites
    * @return self
    */
-  Task after(Collection<Task> prerequisites){
+  public Task after(Collection<Task> prerequisites){
     prerequisites.forEach(this::after);
     return this;
   }
@@ -58,7 +58,7 @@ abstract class Task {
    * @param prerequisite the pre requisite and successful task.
    * @return self
    */
-  Task afterSuccess(Task prerequisite){
+  public Task afterSuccess(Task prerequisite){
     firstToSuccessfullyFinish.add(Objects.requireNonNull(prerequisite));
     return this;
   }
@@ -69,7 +69,7 @@ abstract class Task {
    * @param prerequisites the collection of pre requisites and successful tasks.
    * @return self
    */
-  Task afterSuccess(Collection<Task> prerequisites){
+  public Task afterSuccess(Collection<Task> prerequisites){
     prerequisites.forEach(this::afterSuccess);
     return this;
   }
@@ -80,7 +80,7 @@ abstract class Task {
    * @return true if this is an action task. A task queue imposes certain
    * limits on how many actions may be run concurrently.
    */
-  boolean isAction(){
+  public boolean isAction(){
     return false;
   }
 
@@ -88,7 +88,7 @@ abstract class Task {
   /**
    * @return true if this is a runnable task; false otherwise.
    */
-  final boolean isRunnable(){
+  public final boolean isRunnable(){
 
     for(Task each : firstToFinish){
       if(each.result == null){
@@ -111,7 +111,7 @@ abstract class Task {
    *
    * @param log output log.
    */
-  final void run(Log log){
+  public final void run(Log log){
     if(!Objects.isNull(result)) throw new IllegalStateException();
 
     try {

@@ -40,14 +40,14 @@ public class TaskQueue {
   /**
    * Construct a new TaskQueue object using default values.
    */
-  TaskQueue(){
+  public TaskQueue(){
     this(Log.verbose(), DEFAULT_CONCURRENT_ACTIONS);
   }
 
   /**
    * Construct a new TaskQueue object using default values and log object.
    */
-  TaskQueue(Log log){
+  public TaskQueue(Log log){
     this(log, DEFAULT_CONCURRENT_ACTIONS);
   }
 
@@ -57,7 +57,7 @@ public class TaskQueue {
    * @param log log viewer
    * @param maxConcurrentActions max number of concurrent actions allowed by this task queue.
    */
-  TaskQueue(Log log, int maxConcurrentActions) {
+  public TaskQueue(Log log, int maxConcurrentActions) {
     this.log = log;
     this.maxConcurrentActions = maxConcurrentActions;
   }
@@ -66,7 +66,7 @@ public class TaskQueue {
   /**
    * Adds a task to the queue.
    */
-  synchronized void enqueue(Task task) {
+  public synchronized void enqueue(Task task) {
     tasks.add(task);
   }
 
@@ -119,7 +119,7 @@ public class TaskQueue {
    * Calibrates the max concurrent actions this queue can handle
    * and then run all stored tasks.
    */
-  void calibrateAndRunTask(){
+  public void calibrateAndRunTask(){
     calibrateMaxConcurrentActions();
 
     runTasks();
@@ -128,7 +128,7 @@ public class TaskQueue {
   /**
    * Run all the tasks kept this queue.
    */
-  void runTasks() {
+  public void runTasks() {
     promoteBlockedTasks();
 
     final AtomicInteger counter = new AtomicInteger(0);
