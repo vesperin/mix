@@ -20,7 +20,7 @@ publishMavenStyle := true
 // Do not append Scala versions to the generated artifacts
 crossPaths := false
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.3"
 
 // This forbids including Scala related libraries into the dependency
 autoScalaLibrary := false
