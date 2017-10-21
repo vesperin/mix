@@ -34,7 +34,7 @@ public class Immutable {
    * @return an immutable list.
    */
   public static <T> List<T> listOf(Stream<? extends T> stream) {
-    return stream.collect(toImmutableList());
+    return stream == null ? list() : stream.collect(toImmutableList());
   }
 
   /**
@@ -45,7 +45,7 @@ public class Immutable {
    * @return an immutable list.
    */
   public static <T> List<T> listOf(Collection<? extends T> list) {
-    return list.stream().collect(toImmutableList());
+    return list == null ? list() : list.stream().collect(toImmutableList());
   }
 
   /**
@@ -61,12 +61,12 @@ public class Immutable {
   /**
    * Converts a mutable set into an immutable one.
    *
-   * @param list mutable set
+   * @param set mutable set
    * @param <T>  type parameter
    * @return an immutable set.
    */
-  public static <T> Set<T> setOf(Collection<? extends T> list) {
-    return list.stream().collect(toImmutableSet());
+  public static <T> Set<T> setOf(Collection<? extends T> set) {
+    return set == null ? set() : set.stream().collect(toImmutableSet());
   }
 
   /**
@@ -77,11 +77,13 @@ public class Immutable {
    * @return an immutable list.
    */
   public static <T> Set<T> setOf(Stream<? extends T> stream) {
-    return stream.collect(toImmutableSet());
+    return stream == null ? set() : stream.collect(toImmutableSet());
   }
 
   /** split a list into non-view sublists of length size **/
   public static <T> List<List<T>> split(List<T> list, final int size) {
+    if(list == null || list.isEmpty()) return Immutable.list();
+
     final List<List<T>> parts = new ArrayList<>();
     final int N = list.size();
 
