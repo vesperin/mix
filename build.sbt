@@ -43,7 +43,9 @@ libraryDependencies ++= Seq(
     "junit" % "junit" % "4.12"
 )
 
-assemblyExcludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
+assemblyExcludedJars in assembly := {
+  val cp = (fullClasspath in assembly).value
+
   val excludes = Set(
     "junit-4.12.jar",
     "hamcrest-core-1.3.jar",
@@ -65,5 +67,5 @@ assemblyExcludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
     "org.eclipse.text-3.5.101.jar"
   )
 
-  cp filter { jar => excludes(jar.data.getName) }
+  cp filter {jar => excludes(jar.data.getName) }
 }
