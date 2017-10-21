@@ -10,7 +10,6 @@ import com.vesperin.base.locators.ProgramUnitLocator;
 import com.vesperin.base.locators.SelectedUnit;
 import com.vesperin.base.locators.UnitLocation;
 import com.vesperin.base.locators.UnitLocator;
-import com.vesperin.base.utils.Jdt;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;

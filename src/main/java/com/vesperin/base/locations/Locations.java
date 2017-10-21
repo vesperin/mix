@@ -1,7 +1,7 @@
 package com.vesperin.base.locations;
 
 import com.vesperin.base.Source;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.dom.ASTNode;
 

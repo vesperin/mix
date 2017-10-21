@@ -1,8 +1,8 @@
 package com.vesperin.reflects;
 
-import com.vesperin.base.utils.Expect;
-import com.vesperin.base.utils.Immutable;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.utils.Expect;
+import com.vesperin.utils.Immutable;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMemberValuePairBinding;

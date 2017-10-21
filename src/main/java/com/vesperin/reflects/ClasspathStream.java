@@ -1,7 +1,7 @@
 package com.vesperin.reflects;
 
-import com.vesperin.base.utils.Expect;
-import com.vesperin.base.utils.Immutable;
+import com.vesperin.utils.Expect;
+import com.vesperin.utils.Immutable;
 
 import java.io.File;
 import java.io.IOException;

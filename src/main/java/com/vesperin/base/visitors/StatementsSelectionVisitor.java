@@ -2,7 +2,7 @@ package com.vesperin.base.visitors;
 
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.List;

@@ -1,11 +1,14 @@
-package com.vesperin.base.utils;
+package com.vesperin.utils;
 
 import com.vesperin.base.Context;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.JavaParser;
+import com.vesperin.base.Jdt;
 import com.vesperin.base.ScopeAnalyser;
 import com.vesperin.base.Source;
+import com.vesperin.base.SourceFormat;
 import com.vesperin.base.locations.Locations;
+import com.vesperin.utils.Immutable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.junit.Test;

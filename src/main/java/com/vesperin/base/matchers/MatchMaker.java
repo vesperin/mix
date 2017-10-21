@@ -2,8 +2,8 @@ package com.vesperin.base.matchers;
 
 import com.vesperin.base.Context;
 import com.vesperin.base.ParsedUnit;
-import com.vesperin.base.utils.Immutable;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.utils.Immutable;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.TypeDeclaration;

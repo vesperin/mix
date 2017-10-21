@@ -2,7 +2,7 @@ package com.vesperin.base.matchers;
 
 import com.vesperin.base.Context;
 import com.vesperin.base.ParsedUnit;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.Jdt;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.JavaParser;

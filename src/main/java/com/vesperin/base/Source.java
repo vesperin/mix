@@ -1,9 +1,7 @@
 package com.vesperin.base;
 
-import com.vesperin.base.utils.Expect;
-import com.vesperin.base.utils.Immutable;
-import com.vesperin.base.utils.SourceFormat;
-import com.vesperin.base.utils.StringTemplate;
+import com.vesperin.utils.Expect;
+import com.vesperin.utils.Immutable;
 
 import java.util.Arrays;
 import java.util.Iterator;

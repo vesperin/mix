@@ -4,7 +4,7 @@ import com.vesperin.base.ScopeAnalyser;
 import com.vesperin.base.Scope;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.HashSet;

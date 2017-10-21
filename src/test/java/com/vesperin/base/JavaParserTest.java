@@ -1,6 +1,6 @@
 package com.vesperin.base;
 
-import com.vesperin.base.utils.Immutable;
+import com.vesperin.utils.Immutable;
 import org.junit.Test;
 
 import java.util.Arrays;

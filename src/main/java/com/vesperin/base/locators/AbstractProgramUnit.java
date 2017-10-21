@@ -3,8 +3,8 @@ package com.vesperin.base.locators;
 import com.vesperin.base.Context;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.utils.Expect;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.utils.Expect;
+import com.vesperin.base.Jdt;
 import com.vesperin.base.visitors.StatementsSelectionVisitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 

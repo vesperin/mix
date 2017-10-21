@@ -1,8 +1,8 @@
 package com.vesperin.base;
 
 import com.vesperin.base.locators.UnitLocation;
-import com.vesperin.base.utils.Immutable;
-import com.vesperin.base.utils.Sets;
+import com.vesperin.utils.Immutable;
+import com.vesperin.utils.Sets;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;

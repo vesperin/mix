@@ -1,6 +1,6 @@
 package com.vesperin.reflects;
 
-import com.vesperin.base.utils.Immutable;
+import com.vesperin.utils.Immutable;
 
 import java.nio.file.Path;
 import java.util.Arrays;

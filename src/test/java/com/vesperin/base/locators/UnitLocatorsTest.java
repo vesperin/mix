@@ -3,7 +3,7 @@ package com.vesperin.base.locators;
 import com.vesperin.base.Context;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.Source;
-import com.vesperin.base.utils.Immutable;
+import com.vesperin.utils.Immutable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

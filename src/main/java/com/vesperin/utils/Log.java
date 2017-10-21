@@ -1,4 +1,4 @@
-package com.vesperin.base.utils;
+package com.vesperin.utils;
 
 import java.io.PrintStream;
 

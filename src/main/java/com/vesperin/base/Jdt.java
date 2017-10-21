@@ -1,10 +1,9 @@
-package com.vesperin.base.utils;
+package com.vesperin.base;
 
-import com.vesperin.base.Context;
-import com.vesperin.base.Source;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.visitors.ImportReferencesVisitor;
+import com.vesperin.utils.Sets;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
