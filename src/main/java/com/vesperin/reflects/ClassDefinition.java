@@ -1,8 +1,9 @@
 package com.vesperin.reflects;
 
+import com.vesperin.base.Jdt;
 import com.vesperin.utils.Expect;
 import com.vesperin.utils.Immutable;
-import com.vesperin.base.Jdt;
+import com.vesperin.utils.Strings;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.IPackageBinding;
@@ -60,6 +61,8 @@ public class ClassDefinition {
 
 
   private static final String MISSING = "MISSING";
+  private static final String DEFAULT_NAMESPACE = "";
+  private static final String JAVA_LANG_NAMESPACE = "java.lang";
 
   private static final Pattern EXCLUDING_MODIFIERS = Pattern.compile(
     "\\b(?:public|protected|private|class|interface|enum|abstract|native|static|strictfp|final|synchronized) \\b"
@@ -76,6 +79,7 @@ public class ClassDefinition {
   private final TypeLiteral typeLiteral;
   private final boolean isDeprecated;
   private final boolean isAbstract;
+  private final String reifiedCanonicalName;
 
   /**
    * Construct a new class definition for a given {@link Type}
@@ -127,6 +131,7 @@ public class ClassDefinition {
       this.typeName = "()";
       this.simpleForm = "()";
       this.canonicalName = "()";
+      this.reifiedCanonicalName = "()";
     } else {
       this.typeName = pkgFunction.apply(packageDefinition);
 
@@ -142,12 +147,14 @@ public class ClassDefinition {
         ? typeName
         : packageToString + "." + typeName
       );
+
+      this.reifiedCanonicalName = canonicalName.replace(genericsSubstring(canonicalName), "");
     }
 
     this.isDeprecated = isDeprecated(type);
 
     this.className    = (typeName.contains("<") && typeName.contains(">")
-      ? typeName.substring(0, typeName.lastIndexOf("<"))
+      ? typeName.replace(genericsSubstring(typeName), "")
       : typeName);
   }
 
@@ -170,7 +177,7 @@ public class ClassDefinition {
     this.simpleForm         = this.typeName;
 
     this.className    = (this.typeName.contains("<") && this.typeName.contains(">")
-      ? this.typeName.substring(0, this.typeName.lastIndexOf("<"))
+      ? typeName.replace("<(.+?)>", "")//this.typeName.substring(0, this.typeName.lastIndexOf("<"))
       : typeName);
 
     final String packageToString = this.packageDefinition.toString();
@@ -178,6 +185,11 @@ public class ClassDefinition {
       ? this.typeName
       : packageToString + "." + this.typeName
     );
+
+    this.reifiedCanonicalName = this.canonicalName
+      .replace(
+        genericsSubstring(this.canonicalName), ""
+      );
   }
 
   private static Function<PackageDefinition, String> notDotsPackageDefinitionFunction(Type type) {
@@ -209,6 +221,25 @@ public class ClassDefinition {
       final String genericTypeName = EXCLUDING_MODIFIERS.matcher(genericString).replaceAll("");
       return genericTypeName.replace(packageDef.getName() + ".", "");
     };
+  }
+
+  /**
+   * Test if the type name is a primitive type
+   *
+   * @param typeName type name
+   * @return true if it is a primitive type; false otherwise.
+   */
+  public static boolean isPrimitive(String typeName){
+    return PRIMITIVE_TO_OBJECT.containsKey(Expect.nonNull(typeName));
+  }
+
+  /**
+   * Converts a primitive type into its object equivalent.
+   * @param typeName type name
+   * @return object equivalent of primitive type.
+   */
+  public static String objefyPrimitiveType(String typeName){
+    return PRIMITIVE_TO_OBJECT.get(typeName);
   }
 
   private static boolean isDeprecated(Type type) {
@@ -281,6 +312,33 @@ public class ClassDefinition {
     return ClassDefinition.from(pkgDef, typeName, isClassDeprecated,  isClassAbstract);
   }
 
+  static ClassDefinition classDefinition(ITypeBinding typeBinding){
+    Expect.nonNull(typeBinding);
+
+    final String typeName = typeBinding.getName();
+    String pkgDef;
+
+    if(typeBinding.toString().contains(MISSING)) {
+      pkgDef = PackageDefinition.isJavaLang(typeName)
+        ? JAVA_LANG_NAMESPACE
+        : DEFAULT_NAMESPACE;
+    } else {
+      final Optional<IPackageBinding> packageBinding = Optional.ofNullable(typeBinding.getPackage());
+
+      pkgDef  = packageBinding.isPresent() ? packageBinding.get().getName() : DEFAULT_NAMESPACE;
+
+      if(pkgDef.isEmpty()){
+        pkgDef = PackageDefinition.isJavaLang(typeName)
+          ? JAVA_LANG_NAMESPACE
+          : pkgDef;
+      }
+    }
+
+    final boolean isClassDeprecated = typeBinding.isDeprecated();
+    final boolean isClassAbstract = Modifier.isAbstract(typeBinding.getModifiers());
+
+    return ClassDefinition.from(pkgDef, typeName, isClassDeprecated,  isClassAbstract);
+  }
 
   static ClassDefinition returnClassDefinition(CompilationUnit unit, IMethodBinding methodBinding){
     return classDefinition(unit, methodBinding.getReturnType());
@@ -291,17 +349,24 @@ public class ClassDefinition {
     return classDefinition(unit, methodBinding.getDeclaringClass());
   }
 
-  private static String packageName(CompilationUnit unit, String typeName){
-    final Set<String> imports = Immutable.setOf(
+  static Set<String> unitImports(CompilationUnit unit){
+    return Immutable.setOf(
       Jdt.typeSafeList(ImportDeclaration.class, unit.imports())
         .stream().map(i -> i.getName().getFullyQualifiedName())
     );
+  }
+
+  private static String packageName(CompilationUnit unit, String typeName){
+    final Set<String> imports = unitImports(unit);
 
     for(String eachImport: imports){
       if(eachImport.contains(typeName)) return eachImport.replace("." + typeName, "");
     }
 
-    return "";
+
+    return PackageDefinition.isJavaLang(typeName)
+      ? JAVA_LANG_NAMESPACE
+      : DEFAULT_NAMESPACE;
   }
 
   private static String[] perfectCouple(String pkgString, String candidateTypeName){
@@ -309,8 +374,8 @@ public class ClassDefinition {
 
     String packageName;
     String typeName = candidateTypeName;
-    if(PRIMITIVE_TO_OBJECT.containsKey(typeName) && "".equals(pkgString)){
-      final String pn = PRIMITIVE_TO_OBJECT.get(typeName);
+    if(isPrimitive(typeName) && "".equals(pkgString)){
+      final String pn = objefyPrimitiveType(typeName);
       final int typeNameIndex = pn.lastIndexOf('.');
 
       if(typeNameIndex != -1)  {
@@ -345,7 +410,7 @@ public class ClassDefinition {
   private static ClassDefinition voidClassDefinition(){
     return new ClassDefinition(
       PackageDefinition.from("java.lang"),
-      "java.lang.Void",
+      "Void",
       false,
       false
     );
@@ -549,8 +614,18 @@ public class ClassDefinition {
     return canonicalName;
   }
 
+  public String getReifiedCanonicalName() {
+    return canonicalName;
+  }
+
   public boolean isAbstractClass() {
     return isAbstract;
+  }
+
+  private static String genericsSubstring(final String typeName) {
+    Expect.validArgument(!Expect.nonNull(typeName).isEmpty());
+
+    return Strings.substringWithin(typeName, "<", ">");
   }
 
   /**

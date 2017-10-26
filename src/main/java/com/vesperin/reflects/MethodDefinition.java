@@ -123,6 +123,48 @@ public class MethodDefinition {
   }
 
   /**
+   * Creates a new method definition from a {@link IMethodBinding}
+   *
+   * @param methodBinding the {@link IMethodBinding} object.
+   * @return a new method definition.
+   */
+  public static MethodDefinition from(IMethodBinding methodBinding){
+    final IMethodBinding nonNullBinding = Expect.nonNull(methodBinding);
+
+    final String methodName = nonNullBinding.getName();
+
+    final List<ClassDefinition> arguments = Immutable.listOf(
+      Arrays.stream(methodBinding.getParameterTypes()).map(ClassDefinition::classDefinition)
+    );
+
+    final Set<ClassDefinition> exceptions = Immutable.setOf(
+      Arrays.stream(methodBinding.getExceptionTypes()).map(ClassDefinition::classDefinition)
+    );
+
+    final Set<AnnotationDefinition> annotations = Immutable.setOf(
+      Arrays.stream(methodBinding.getAnnotations()).map(MethodDefinition::annotationDefinition)
+    );
+
+    final List<ClassDefinition> typeParameters = Immutable.listOf(
+      Arrays.stream(methodBinding.getTypeParameters()).map(ClassDefinition::classDefinition)
+    );
+
+    final Set<MethodModifier> modifiers = Immutable.setOf(MethodModifier.from(methodBinding.getModifiers()));
+    final boolean isDeprecated  = methodBinding.isDeprecated();
+
+    final ClassDefinition    declaringClass = classDefinition(methodBinding.getDeclaringClass());
+
+
+    final ClassDefinition returnType = classDefinition(methodBinding.getReturnType());
+
+    return from(methodName, arguments,
+      returnType, annotations, exceptions, typeParameters,
+      modifiers, isDeprecated, declaringClass);
+
+
+  }
+
+  /**
    * Creates a new method definition from a {@link MethodDeclaration}
    *
    * @param method the {@link MethodDeclaration} object.
@@ -389,7 +431,7 @@ public class MethodDefinition {
   /**
    * @return this method's arguments.
    */
-  public List<ClassDefinition> getArguments() {
+  public List<ClassDefinition> getParameterTypes() {
     return arguments;
   }
 
@@ -427,7 +469,7 @@ public class MethodDefinition {
   }
 
   public boolean sameArgCount(int count){
-    return getArguments().size() == count;
+    return getParameterTypes().size() == count;
   }
 
   /**

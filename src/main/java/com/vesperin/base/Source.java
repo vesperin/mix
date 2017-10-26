@@ -1,15 +1,13 @@
 package com.vesperin.base;
 
-import com.vesperin.utils.Expect;
 import com.vesperin.utils.Immutable;
+import com.vesperin.utils.Iterables;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -145,30 +143,13 @@ public class Source {
 
       final String line = fromContent.substring(matcher.start(), matcher.end());
       final List<String> chunks = Immutable.listOf(Arrays.stream(line.split(" ")).map(String::trim));
-      final int targetIndex = indexOf(chunks, Pattern.compile("class").asPredicate()) + 1;
+      final int targetIndex = Iterables.indexOf(chunks, Pattern.compile("class").asPredicate()) + 1;
 
       return chunks.get(targetIndex);
     }
 
 
     throw new NoSuchElementException("Error: Name not found");
-  }
-
-  public static <T> int indexOf(Iterable<T> iterable, Predicate<? super T> predicate) {
-    Expect.nonNull(iterable);
-    Expect.nonNull(predicate);
-
-    final Iterator<T> iterator = iterable.iterator();
-
-    for (int idx = 0; iterator.hasNext(); idx++) {
-      final T currentElement = iterator.next();
-
-      if (predicate.test(currentElement)) {
-        return idx;
-      }
-    }
-
-    return -1; // nothing found
   }
 
   @Override public String toString() {
