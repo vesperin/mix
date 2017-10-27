@@ -787,6 +787,10 @@ public class ClassDefinition {
   }
 
   public static void main(String[] args) {
+
+    System.out.println(Classpath.getClasspath().getClassNameToDefinitionIndex().containsKey("int"));
+    System.out.println(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey("int"));
+
     final ClassDefinition      a    = ClassDefinition.forceGeneric(List.class);
     final ClassDefinition      b    = ClassDefinition.forceGeneric(ArrayList.class);
 

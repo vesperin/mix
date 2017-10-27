@@ -17,6 +17,19 @@ import java.util.Set;
  */
 public class Classpath {
 
+  private static final List<Class<?>> PRIMITIVES = new ArrayList<>();
+  static {
+    PRIMITIVES.add(byte.class);
+    PRIMITIVES.add(short.class);
+    PRIMITIVES.add(int.class);
+    PRIMITIVES.add(long.class);
+    PRIMITIVES.add(float.class);
+    PRIMITIVES.add(double.class);
+    PRIMITIVES.add(boolean.class);
+    PRIMITIVES.add(char.class);
+  }
+
+
   private final Map<String, ClassDefinition>                  canonicalNameToDefinition;
   private final Map<String, Set<ClassDefinition>>             classNameToDefinitionIndex;
   private final Map<ClassDefinition, Set<MethodDefinition>>   classToMethodsIndex;
@@ -44,6 +57,9 @@ public class Classpath {
     if(classes != null && !classes.isEmpty()){
       buildIndices(classes);
     }
+
+    // add primitives
+    buildIndices(PRIMITIVES);
   }
 
   /**
@@ -160,6 +176,7 @@ public class Classpath {
   }
 
   private void buildIndices(List<Class<?>> classes){
+
     for(Class<?> eachClass : classes){
       final ClassDefinition definition = ClassDefinition.forceGeneric(eachClass);
 

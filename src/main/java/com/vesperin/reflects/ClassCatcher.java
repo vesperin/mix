@@ -20,7 +20,7 @@ public class ClassCatcher {
         Arrays.asList(
           "java.io", "java.math", "java.net", "java.nio",
           "java.text", "java.util", "java.sql", "org.w3c.dom",
-          "javax.print", "javax.sound", "javax.imageio",
+          "java.lang", "javax.print", "javax.sound", "javax.imageio",
           "javax.swing", "java.awt", "javax.accessibility",
           "javax.xml", "javax.security", "javax.crypto",
           "java.security", "javax.script", "javax.sql",
