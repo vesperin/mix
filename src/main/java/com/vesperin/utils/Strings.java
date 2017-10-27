@@ -24,18 +24,20 @@ public class Strings {
 
   public static String substringWithin(final String text, final String open, final String close) {
     if (text == null || open == null || close == null) {
-      return text;
+      return BLANK_SPACE;
     }
 
-    final int start = text.indexOf(open);
+    final String toChange = Expect.nonNull(text);
+
+    final int start = toChange.indexOf(open);
     if (start != -1) {
-      final int end = text.indexOf(close, start + open.length());
+      final int end = toChange.indexOf(close, start + open.length());
       if (end != -1) {
-        return text.substring(start, end + open.length());
+        return toChange.substring(start, end + open.length());
       }
     }
 
-    return text;
+    return toChange.equals(text) ? BLANK_SPACE : toChange;
   }
 
 }
