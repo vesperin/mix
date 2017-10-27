@@ -1,5 +1,7 @@
 package com.vesperin.reflects;
 
+import com.vesperin.utils.Expect;
+
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -52,9 +54,33 @@ public class JdkPredicates {
   public static boolean isPublicDocumentedJdkClass(Class<?> k) {
     if (ClassDefinition.isPublic(k)) {
       final String packageName = k.getPackage().getName();
-      return packageName != null && jdkAll().matcher(packageName).matches();
+      return inJdk(packageName);
     }
     return false;
+  }
+
+  /**
+   * Test if the given {@code CharSequence} is public and belongs to one of public
+   * documented JDK packages.
+   *
+   * @param packageName package name
+   *
+   * @return {@code true} if the given {@code CharSequence} is public and belongs
+   * to one of public documented JDK packages.
+   */
+  public static boolean inJdk(String packageName){
+    return packageName != null && inPackage(packageName, jdkAll());
+  }
+
+  /**
+   * Test if the given {@code CharSequence} is in a package.
+   *
+   * @param packageName name of package.
+   * @param pattern regex to match package names.
+   * @return
+   */
+  public static boolean inPackage(String packageName, Pattern pattern){
+    return Expect.nonNull(pattern).matcher(packageName).matches();
   }
 
   static {
