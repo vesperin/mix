@@ -234,7 +234,7 @@ public class Classpath {
       .filter(MethodDefinition.isRelevantMethodDefinition()));
   }
 
-  static Classpath getClasspath(){
+  public static Classpath getClasspath(){
     return new Classpath(Installer.CLASSES);
   }
 
