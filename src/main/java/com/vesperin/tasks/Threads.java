@@ -40,7 +40,7 @@ public class Threads {
       private int nextId = 0;
 
       public synchronized Thread newThread(Runnable r) {
-        Thread thread = new Thread(r, name + "-" + (nextId++));
+        final Thread thread = new Thread(r, name + "-" + (nextId++));
         thread.setDaemon(true);
         return thread;
       }

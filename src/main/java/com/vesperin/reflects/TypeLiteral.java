@@ -1,5 +1,7 @@
 package com.vesperin.reflects;
 
+import com.vesperin.utils.Expect;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -37,6 +39,8 @@ public enum TypeLiteral {
   /** type variable**/
   TYPE_VARIABLE (new TypeVariableMatcher()),
 
+  INTERFACE(null),
+
   /** class **/
   CLASS (null);
 
@@ -58,13 +62,17 @@ public enum TypeLiteral {
 
   public static TypeLiteral from(Type type){
 
+    final Type nonNull = Expect.nonNull(type);
+
     for( TypeLiteral each : values()){
-      if(each.matches(type)){
+      if(each.matches(nonNull)){
         return each;
       }
     }
 
-    return CLASS;
+    final boolean isInterface = nonNull.toString().contains("interface");
+
+    return isInterface ? INTERFACE : CLASS;
   }
 
   public static TypeLiteral voidOrClass(String name){

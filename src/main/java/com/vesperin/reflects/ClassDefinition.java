@@ -3,6 +3,7 @@ package com.vesperin.reflects;
 import com.vesperin.base.Jdt;
 import com.vesperin.utils.Expect;
 import com.vesperin.utils.Immutable;
+import com.vesperin.utils.Sets;
 import com.vesperin.utils.Strings;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -16,15 +17,11 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -33,6 +30,15 @@ import java.util.stream.Stream;
 public class ClassDefinition {
 
 
+  private static final Pattern EXCLUDING_MODIFIERS = Pattern.compile(
+    "\\b(?:public|protected|private|class|interface|enum|abstract|native|static|strictfp|final|synchronized) \\b"
+  );
+
+  private static final int USE_LAMBDA_EXPRESSION      = 0;
+  private static final int NOT_USE_LAMBDA_EXPRESSION  = 1;
+
+
+  private static final Classpath CS;
   private static final Map<String, String> PRIMITIVE_TO_OBJECT;
 
   static {
@@ -56,6 +62,8 @@ public class ClassDefinition {
     lookUpTable.put("char[]", "java.lang.Character[]");
 
     PRIMITIVE_TO_OBJECT = Collections.unmodifiableMap(lookUpTable);
+
+    CS = Classpath.getClasspath();
   }
 
 
@@ -64,12 +72,6 @@ public class ClassDefinition {
   private static final String DEFAULT_NAMESPACE = "";
   private static final String JAVA_LANG_NAMESPACE = "java.lang";
 
-  private static final Pattern EXCLUDING_MODIFIERS = Pattern.compile(
-    "\\b(?:public|protected|private|class|interface|enum|abstract|native|static|strictfp|final|synchronized) \\b"
-  );
-
-  private static final int USE_LAMBDA_EXPRESSION      = 0;
-  private static final int NOT_USE_LAMBDA_EXPRESSION  = 1;
 
   private final PackageDefinition packageDefinition;
   private final String typeName;
@@ -156,6 +158,7 @@ public class ClassDefinition {
     this.className    = (typeName.contains("<") && typeName.contains(">")
       ? typeName.replace(genericsSubstring(typeName), "")
       : typeName);
+
   }
 
   /**
@@ -235,10 +238,11 @@ public class ClassDefinition {
 
   /**
    * Converts a primitive type into its object equivalent.
+   *
    * @param typeName type name
    * @return object equivalent of primitive type.
    */
-  public static String objefyPrimitiveType(String typeName){
+  public static String objectifyPrimitiveType(String typeName){
     return PRIMITIVE_TO_OBJECT.get(typeName);
   }
 
@@ -291,6 +295,15 @@ public class ClassDefinition {
     final PackageDefinition pkgDef = PackageDefinition.from(packageName);
 
     return new ClassDefinition(pkgDef, typeName, isDeprecated, isAbstract);
+  }
+
+  public static ClassDefinition from(Type type) {
+    if (type instanceof ParameterizedType || type instanceof TypeVariable ||
+      type instanceof GenericArrayType || type instanceof Class) {
+      return new ClassDefinition(type);
+    } else {
+      throw new IllegalArgumentException("unknown subtype of Type: " + type.getClass());
+    }
   }
 
   public static ClassDefinition classDefinition(CompilationUnit unit, ITypeBinding typeBinding){
@@ -375,7 +388,7 @@ public class ClassDefinition {
     String packageName;
     String typeName = candidateTypeName;
     if(isPrimitive(typeName) && "".equals(pkgString)){
-      final String pn = objefyPrimitiveType(typeName);
+      final String pn = objectifyPrimitiveType(typeName);
       final int typeNameIndex = pn.lastIndexOf('.');
 
       if(typeNameIndex != -1)  {
@@ -396,15 +409,6 @@ public class ClassDefinition {
     }
 
     return result;
-  }
-
-  public static ClassDefinition from(Type type) {
-    if (type instanceof ParameterizedType || type instanceof TypeVariable ||
-      type instanceof GenericArrayType || type instanceof Class) {
-      return new ClassDefinition(type);
-    } else {
-      throw new IllegalArgumentException("unknown subtype of Type: " + type.getClass());
-    }
   }
 
   private static ClassDefinition voidClassDefinition(){
@@ -429,6 +433,52 @@ public class ClassDefinition {
     }
   }
 
+  /**
+   * Returns all implementing interfaces, or super class for a given java.lang.Class
+   * object.
+   *
+   * @param klass the class to introspect
+   * @return a set containing all implementing interfaces and a super class.
+   */
+  public static Set<ClassDefinition> getSuperClassDefinitions(Class<?> klass){
+
+    return Immutable.setOf(
+      parentsOf(klass)
+        .stream()
+        .map(ClassDefinition::forceGeneric)
+    );
+  }
+
+  public static Set<Class<?>> parentsOf(Class<?> that) {
+    if (that == null) return Immutable.set();
+
+    final Queue<Class<?>> Q = new LinkedList<>();
+    Q.add(that);
+
+    final Set<Class<?>> seen = new HashSet<>();
+
+    do {
+      final Class<?> w = Q.remove();
+
+      Set<Class<?>> one =  Arrays.stream(w.getInterfaces()).collect(Collectors.toSet());
+      final Optional<Class<?>> superClass = Optional.ofNullable(w.getSuperclass());
+
+      Set<Class<?>> two = new HashSet<>();
+      superClass.ifPresent(two::add);
+      two.removeIf(c -> c.getName().equals("java.lang.Object"));
+
+      final Set<Class<?>> parents = Sets.union(one, two);
+
+      for(Class<?> eachParent : parents){
+        if(!seen.contains(eachParent)){
+          seen.add(eachParent);
+          Q.add(eachParent);
+        }
+      }
+    } while (!Q.isEmpty());
+
+    return seen;
+  }
 
   public static ClassDefinition forceGeneric(Class<?> klass) {
     return new ClassDefinition(klass, klass.toGenericString(), USE_LAMBDA_EXPRESSION);
@@ -589,6 +639,66 @@ public class ClassDefinition {
     }
   }
 
+  /**
+   * Determines if the class or interface represented by this
+   * {@code ClassDefinition} object is either the same as, or is
+   * a superclass or super interface of, the class or interface
+   * represented by the specified {@code ClassDefinition} parameter.
+   *
+   * @param other the other definition to be checked
+   * @return true if it is assignable from; false otherwise.
+   */
+  public boolean isSuperDefinitionOf(ClassDefinition other){
+
+    final ClassDefinition thisDefinition = this;
+    final ClassDefinition thatDefinition = Expect.nonNull(other);
+
+    return isAssignableFrom(thisDefinition, thatDefinition);
+
+  }
+
+  private boolean isAssignableFrom(ClassDefinition thisDefinition, ClassDefinition thatDefinition) {
+    // same definition case
+    final String thisReifiedName = thisDefinition.getReifiedCanonicalName();
+    final String thatReifiedName = thatDefinition.getReifiedCanonicalName();
+    if(thisReifiedName.equals(thatDefinition.getReifiedCanonicalName())){
+      return true;
+    }
+
+    final Set<ClassDefinition> children = childrenOf(thisDefinition);
+    for(ClassDefinition child : children){
+      if(thatReifiedName.equals(child.getReifiedCanonicalName())){
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Determines if the class or interface represented by this
+   * {@code ClassDefinition} object is either the same as, or is
+   * a subclass or sub interface of, the class or interface
+   * represented by the specified {@code ClassDefinition} parameter.
+   *
+   * @param other the other definition to be checked
+   * @return true if they are compatible; false otherwise.
+   */
+  public boolean isSubDefinitionOf(ClassDefinition other){
+    final ClassDefinition thisDefinition = this;
+    final ClassDefinition thatDefinition = Expect.nonNull(other);
+
+    return isAssignableFrom(thatDefinition, thisDefinition);
+  }
+
+
+  private static Set<ClassDefinition> childrenOf(ClassDefinition thisDefinition){
+    if(thisDefinition == null) return Immutable.set();
+    if(!CS.getClassToSubDefinitions().containsKey(thisDefinition)) return Immutable.set();
+
+    return CS.getClassToSubDefinitions().get(thisDefinition);
+  }
+
   public boolean isDeprecated() {
     return isDeprecated;
   }
@@ -615,7 +725,7 @@ public class ClassDefinition {
   }
 
   public String getReifiedCanonicalName() {
-    return canonicalName;
+    return reifiedCanonicalName;
   }
 
   public boolean isAbstractClass() {
@@ -669,11 +779,36 @@ public class ClassDefinition {
   @Override public String toString() {
     return "ClassDefinition (" +
       "pkgDef=" + packageDefinition +
-      ", qualifiedName='" + getCanonicalName() + '\'' +
+      ", qualifiedName='" + getReifiedCanonicalName() + '\'' +
       ", isDeprecated='" + isDeprecated() + '\'' +
       ", isAbstract='" + isDeprecated() + '\'' +
       ", type=" + typeLiteral +
       ')';
+  }
+
+  public static void main(String[] args) {
+    final ClassDefinition      a    = ClassDefinition.forceGeneric(List.class);
+    final ClassDefinition      b    = ClassDefinition.forceGeneric(ArrayList.class);
+
+    final ClassDefinition      c    = ClassDefinition.forceGeneric(Collection.class);
+    final ClassDefinition      d    = ClassDefinition.forceGeneric(int.class);
+    final ClassDefinition      e    = ClassDefinition.forceGeneric(Integer.class);
+
+
+    System.out.println("...");
+
+    System.out.println(a.isSuperDefinitionOf(b));
+    System.out.println(b.isSubDefinitionOf(a));
+
+
+    System.out.println((b.isSuperDefinitionOf(b) == b.isSubDefinitionOf(b)));
+
+    System.out.println(a.isSuperDefinitionOf(c));
+    System.out.println(c.isSuperDefinitionOf(a));
+
+    System.out.println(d.isSuperDefinitionOf(e));
+    System.out.println(e.isSubDefinitionOf(d));
+
   }
 
 }
