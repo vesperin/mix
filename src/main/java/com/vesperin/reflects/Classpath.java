@@ -238,39 +238,39 @@ public class Classpath {
     return new Classpath(Installer.CLASSES);
   }
 
-  Map<ClassDefinition, Set<MethodDefinition>> getClassToMethodsIndex(){
+  public Map<ClassDefinition, Set<MethodDefinition>> getClassToMethodsIndex(){
     return classToMethodsIndex;
   }
 
-  Map<ClassDefinition, Set<ClassDefinition>> getClassToSuperDefinitions(){
+  public Map<ClassDefinition, Set<ClassDefinition>> getClassToSuperDefinitions(){
     return classToSuperDefinitions;
   }
 
-  Map<ClassDefinition, Set<ClassDefinition>> getClassToSubDefinitions(){
+  public Map<ClassDefinition, Set<ClassDefinition>> getClassToSubDefinitions(){
     return classToSubDefinitions;
   }
 
-  Map<String, Set<ClassDefinition>> getClassNameToDefinitionIndex(){
+  public Map<String, Set<ClassDefinition>> getClassNameToDefinitionIndex(){
     return classNameToDefinitionIndex;
   }
 
-  Map<String, PackageDefinition> getPackageNameIndex(){
+  public Map<String, PackageDefinition> getPackageNameIndex(){
     return packageNameIndex;
   }
 
-  Map<PackageDefinition, Set<ClassDefinition>> getPackageToClassesIndex(){
+  public Map<PackageDefinition, Set<ClassDefinition>> getPackageToClassesIndex(){
     return packageToClassesIndex;
   }
 
-  Map<ClassDefinition, Set<PackageDefinition>> getClassToPackagesIndex(){
+  public Map<ClassDefinition, Set<PackageDefinition>> getClassToPackagesIndex(){
     return classToPackagesIndex;
   }
 
-  Map<String, ClassDefinition> getCanonicalNameToDefinition(){
+  public Map<String, ClassDefinition> getCanonicalNameToDefinition(){
     return canonicalNameToDefinition;
   }
 
-  synchronized Classpath clearClasspath(){
+  public synchronized Classpath clearClasspath(){
     getClassNameToDefinitionIndex().clear();
     getClassToMethodsIndex().clear();
     getPackageNameIndex().clear();
