@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Huascar Sanchez
@@ -247,8 +248,9 @@ public class Classpath {
   }
 
   private static Set<MethodDefinition> methodDefinitions(Class<?> eachClass){
-    return Immutable.setOf(MethodDefinition.allMethods(eachClass)
-      .filter(MethodDefinition.isRelevantMethodDefinition()));
+    return MethodDefinition.allMethods(eachClass)
+      .filter(MethodDefinition.isRelevantMethodDefinition())
+      .collect(Collectors.toSet());
   }
 
   public static Classpath getClasspath(){
@@ -302,6 +304,12 @@ public class Classpath {
   // lazy loaded singleton
   static class Installer {
     static List<Class<?>> CLASSES = ClassCatcher.getClasspath();
+  }
+
+  public static void main(String[] args) {
+    Classpath a = Classpath.getClasspath();
+    Classpath b = new Classpath(new ArrayList<>(PRIMITIVES));
+    Classpath c = Classpath.concat(a, b);
   }
 
 }

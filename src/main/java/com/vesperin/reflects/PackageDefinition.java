@@ -2,9 +2,7 @@ package com.vesperin.reflects;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -194,6 +192,19 @@ public class PackageDefinition {
   private static PackageDefinition from(Class<?> cls){
     final Package pkg = cls.getPackage();
     if(pkg != null) return new PackageDefinition(pkg);
+
+    if(cls.isArray()){
+      final String targetText = cls.toString();
+      final int idx = targetText.lastIndexOf('.');
+
+      if(idx != -1){
+        final String open  = "class [L";
+        final String close = targetText.substring(idx, targetText.length());
+        final String pkgString = targetText.replace(open, "").replace(close, "");
+        return new PackageDefinition(pkgString);
+      }
+    }
+
     return new PackageDefinition(NOTHING);
   }
 

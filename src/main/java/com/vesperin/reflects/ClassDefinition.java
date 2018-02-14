@@ -388,20 +388,24 @@ public class ClassDefinition {
     String packageName;
     String typeName = candidateTypeName;
     if(isPrimitive(typeName) && "".equals(pkgString)){
-      final String pn = objectifyPrimitiveType(typeName);
-      final int typeNameIndex = pn.lastIndexOf('.');
+//      final String pn = objectifyPrimitiveType(typeName);
+//      final int typeNameIndex = pn.lastIndexOf('.');
+//
+//      if(typeNameIndex != -1)  {
+//        packageName = pn.substring(0, typeNameIndex);
+//        typeName    = pn.substring(typeNameIndex + 1, pn.length());
+//        result[0]   = packageName;
+//        result[1]   = typeName;
+//
+//      } else {
+//        packageName = pkgString;
+//        result[0]   = packageName;
+//        result[1]   = typeName;
+//      }
+      packageName = pkgString;
+      result[0]   = packageName;
+      result[1]   = typeName;
 
-      if(typeNameIndex != -1)  {
-        packageName = pn.substring(0, typeNameIndex);
-        typeName    = pn.substring(typeNameIndex + 1, pn.length());
-        result[0]   = packageName;
-        result[1]   = typeName;
-
-      } else {
-        packageName = pkgString;
-        result[0]   = packageName;
-        result[1]   = typeName;
-      }
     } else {
       packageName = pkgString;
       result[0]   = packageName;
@@ -787,31 +791,45 @@ public class ClassDefinition {
   }
 
   public static void main(String[] args) {
+    //Classpath.getClasspath();
+    System.out.println(System.getProperty("java.home") + "/lib");
+    System.out.println(System.getProperty("sun.boot.class.path"));
+//    System.out.println(Classpath.getClasspath().getClassNameToDefinitionIndex().containsKey("int"));
+//    System.out.println(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey("int"));
+//
+//    final ClassDefinition      a    = ClassDefinition.forceGeneric(int.class);
+//    final ClassDefinition      b    = ClassDefinition.forceGeneric(Integer.class);
+//
+//    System.out.println(b.isSubDefinitionOf(a));
 
-    System.out.println(Classpath.getClasspath().getClassNameToDefinitionIndex().containsKey("int"));
-    System.out.println(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey("int"));
+//
+//    final ClassDefinition      c    = ClassDefinition.forceGeneric(Collection.class);
+//    final ClassDefinition      d    = ClassDefinition.forceGeneric(int.class);
+//    final ClassDefinition      e    = ClassDefinition.forceGeneric(Integer.class);
+//
+//
+//    System.out.println("...");
+//
+//    System.out.println(a.isSuperDefinitionOf(b));
+//    System.out.println(b.isSubDefinitionOf(a));
+//
+//
+//    System.out.println((b.isSuperDefinitionOf(b) == b.isSubDefinitionOf(b)));
+//
+//    System.out.println(a.isSuperDefinitionOf(c));
+//    System.out.println(c.isSuperDefinitionOf(a));
+//
+//    System.out.println(d.isSuperDefinitionOf(e));
+//    System.out.println(e.isSubDefinitionOf(d));
 
-    final ClassDefinition      a    = ClassDefinition.forceGeneric(List.class);
-    final ClassDefinition      b    = ClassDefinition.forceGeneric(ArrayList.class);
-
-    final ClassDefinition      c    = ClassDefinition.forceGeneric(Collection.class);
-    final ClassDefinition      d    = ClassDefinition.forceGeneric(int.class);
-    final ClassDefinition      e    = ClassDefinition.forceGeneric(Integer.class);
-
-
-    System.out.println("...");
-
-    System.out.println(a.isSuperDefinitionOf(b));
-    System.out.println(b.isSubDefinitionOf(a));
-
-
-    System.out.println((b.isSuperDefinitionOf(b) == b.isSubDefinitionOf(b)));
-
-    System.out.println(a.isSuperDefinitionOf(c));
-    System.out.println(c.isSuperDefinitionOf(a));
-
-    System.out.println(d.isSuperDefinitionOf(e));
-    System.out.println(e.isSubDefinitionOf(d));
+//    if(ClassDefinition.isPrimitive("int")){
+//      String intObj = ClassDefinition.objectifyPrimitiveType("int");
+//      if(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey(intObj)){
+//        System.out.println(intObj);
+//      }
+//    }
+    final ClassDefinition      z    = ClassDefinition.forceGeneric(String[].class);
+    System.out.println(z);
 
   }
 

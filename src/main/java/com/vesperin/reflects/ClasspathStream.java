@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -130,7 +131,11 @@ public class ClasspathStream implements Stream<Class<?>> {
   }
 
   static List<Class<?>> javaClasses(Set<String> allowedPackages) {
-    return ClasspathStream.publicClasses(ClasspathStream.getJreLibPath())
+
+    final Path jreLibPath = ClasspathStream.getJreLibPath();
+    if(jreLibPath == null) return Collections.emptyList();
+
+    return ClasspathStream.publicClasses(jreLibPath)
       .filter(s -> allowedPackages.contains(s.getPackage().getName()))
       .collect(Collectors.toList());
   }

@@ -1,7 +1,5 @@
 package com.vesperin.utils;
 
-import java.util.Objects;
-
 /**
  * Measures the time that elapses between the start and end of a
  * programming task (wall-clock time).
@@ -9,22 +7,9 @@ import java.util.Objects;
 public final class StopWatch {
 
   private long start = System.currentTimeMillis();
-  private static Log logger = Log.quiet();
-
-  public static StopWatch make(){
-    return make(null);
-  }
-
-  public static StopWatch make(Log log){
-    if(!Objects.isNull(log)){
-      logger = log;
-    }
-
-    return new StopWatch();
-  }
 
   /**
-   * Resets and returns elapsed time in milliseconds.
+   * Resets and returns elapsed time in seconds.
    */
   private double reset() {
     long now = System.currentTimeMillis();
@@ -35,13 +20,24 @@ public final class StopWatch {
     }
   }
 
+  /**
+   * @return the elapsed CPU time (in seconds) since the stopwatch was created.
+   *    after this value has been returned, the stop watch automatically resets
+   *    this time (makes a new call to {@link System#currentTimeMillis()}).
+   */
+  public double elapsedTime(){
+    return reset();
+  }
 
   /**
-   * Resets and then logs the elapsed CPU time (in seconds)
+   * Resets and reports the elapsed CPU time (in seconds)
    * since the stopwatch was created.
    *
+   * @param label user-provided label
+   * @return reported elapsed time
    */
-  public void elapsedTime(String label) {
-    logger.info(label + ": " + reset() + "s");
+  public String reportElapsedTime(String label){
+    return (label + ": " + elapsedTime() + "s");
   }
+
 }
