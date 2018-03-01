@@ -1,11 +1,11 @@
 package com.vesperin.base;
 
+import java.util.Map;
+
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
-
-import java.util.*;
 
 /**
  * @author Huascar Sanchez
@@ -37,6 +37,35 @@ public class EclipseJavaParser implements JavaParser {
     JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
     astParser.setCompilerOptions(options);
   }
+
+  public void setASTParserEnv(String[] classpathEntries, String[] sourcepathEntries, String[] encodings) {
+      this.astParser.setEnvironment(classpathEntries, sourcepathEntries, encodings, true);
+  }
+
+  @Override
+    public Context parseJava(Source code) {
+        this.astParser.setKind(ASTParser.K_COMPILATION_UNIT);
+        this.astParser.setStatementsRecovery(true);
+        this.astParser.setBindingsRecovery(true);
+        this.astParser.setUnitName(code.getName() + JAVA_EXTENSION);
+        this.astParser.setSource(code.getContent().toCharArray());
+
+        ASTNode unit = null;
+        ParsedUnit parsedUnit = null;
+        try {
+            unit = this.astParser.createAST(null);
+            if(unit == null){
+                parsedUnit = ParsedUnit.empty();
+            }
+
+            parsedUnit = ParsedUnit.makeUnit(unit, false );
+          } catch (RuntimeException error){
+            throw new RuntimeException("Error: Unable to parse!");
+          }
+        Context context = new Context(code);
+        Context.bindContext(context, parsedUnit);
+        return context;
+    }
 
   @Override public ParsedUnit parseJava(Context context, int mode) {
 
