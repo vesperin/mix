@@ -31,9 +31,6 @@ public class EclipseJavaParser implements JavaParser {
     final JavaParserConfiguration nonNull = Expect.nonNull(configuration);
     this.astParser = nonNull.getAstParser();
 
-    this.astParser.setResolveBindings(true);
-    this.astParser.setEnvironment(null, null, null, true);
-
     final Map options = JavaCore.getOptions();
     JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
     astParser.setCompilerOptions(options);
