@@ -56,19 +56,19 @@ public class JavaParserTest {
   );
 
   private static final Source TypeAnnotatedNeedClassPathSRC = Source.from("Example",
-          String.join("\n",
-            Immutable.listOf(Arrays.asList(
-              ""
-              ,"import com.vesperin.base.TestingTypeAnnotation;"
-              ,""
-              ,"public class Example {"
-              , " public @TestingTypeAnnotation(TestingTypeAnnotation.TestEnumValue.TOP) int exit(){"
-              , "   return 1;"
-              , " }"
-              , "}"
-              ))
-                )
-        );
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
+        ""
+        ,"import com.vesperin.base.TestingTypeAnnotation;"
+        ,""
+        ,"public class Example {"
+        , " public @TestingTypeAnnotation(TestingTypeAnnotation.TestEnumValue.TOP) int exit(){"
+        , "   return 1;"
+        , " }"
+        , "}"
+        ))
+          )
+  );
 
   @Test public void testTypeAnnotation() throws Exception {
     final String expectedAnnotationStrValue = "Example.TestingAll(value=1)";
@@ -82,22 +82,22 @@ public class JavaParserTest {
 
       assertEquals(1, definition.getReturnType().getAnnotations().size());
       for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
-          assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
+        assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
       }
     }
   }
 
   @Test public void testTypeAnnotationWithClassPath() throws Exception {
       final String expectedAnnotationStrValue =
-              "com.vesperin.base.TestingTypeAnnotation("
-              + "value=public static final com.vesperin.base.TestingTypeAnnotation.TestEnumValue TOP"
-              + ")";
+          "com.vesperin.base.TestingTypeAnnotation("
+          + "value=public static final com.vesperin.base.TestingTypeAnnotation.TestEnumValue TOP"
+          + ")";
 
       final String workingDir = System.getProperty("user.dir");
       final Context context = new JavaParserConfiguration()
-              .setClasspathEntries(Arrays.asList(Paths.get(workingDir, "bin").toString()))
-              .configure()
-              .parseJava(TypeAnnotatedNeedClassPathSRC);
+          .setClasspathEntries(Arrays.asList(Paths.get(workingDir, "bin").toString()))
+          .configure()
+          .parseJava(TypeAnnotatedNeedClassPathSRC);
 
       MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
       context.accept(methodDeclarationVisitor);
@@ -108,7 +108,7 @@ public class JavaParserTest {
 
         assertEquals(1, definition.getReturnType().getAnnotations().size());
         for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
-            assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
+          assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
         }
       }
     }

@@ -8,10 +8,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE_USE, ElementType.TYPE_PARAMETER })
 public @interface TestingTypeAnnotation {
-    TestEnumValue[] value();
+  TestEnumValue[] value();
 
-    public enum TestEnumValue {
-        TOP;
-    }
+  public enum TestEnumValue {
+    TOP;
+  }
 }
 
