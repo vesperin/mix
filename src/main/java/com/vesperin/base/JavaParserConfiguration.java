@@ -32,12 +32,21 @@ public class JavaParserConfiguration {
     this.sourcepathEntries = new ArrayList<>();
     this.encodings = new ArrayList<>();
     this.resolveBindings = true;
+
+    configureOnce();
   }
 
   /**
    * @return a new and configured EclipseJavaParser
    */
   public JavaParser configure(){
+
+    configureOnce();
+
+    return new EclipseJavaParser(this);
+  }
+
+  private void configureOnce(){
 
     if (!isResolvingBindings()){
       this.getAstParser().setResolveBindings(false);
@@ -59,8 +68,6 @@ public class JavaParserConfiguration {
       parserEncodings,
       true
     );
-
-    return new EclipseJavaParser(this);
   }
 
   public ASTParser getAstParser() {
