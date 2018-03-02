@@ -1,13 +1,16 @@
 package com.vesperin.base;
 
 import com.vesperin.base.visitors.MethodDeclarationVisitor;
+import com.vesperin.reflects.AnnotationDefinition;
 import com.vesperin.reflects.MethodDefinition;
 import com.vesperin.utils.Immutable;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -52,7 +55,23 @@ public class JavaParserTest {
           )
   );
 
+  private static final Source TypeAnnotatedNeedClassPathSRC = Source.from("Example",
+          String.join("\n",
+            Immutable.listOf(Arrays.asList(
+              ""
+              ,"import com.vesperin.base.TestingTypeAnnotation;"
+              ,""
+              ,"public class Example {"
+              , " public @TestingTypeAnnotation(TestingTypeAnnotation.TestEnumValue.TOP) int exit(){"
+              , "   return 1;"
+              , " }"
+              , "}"
+              ))
+                )
+        );
+
   @Test public void testTypeAnnotation() throws Exception {
+    final String expectedAnnotationStrValue = "Example.TestingAll(value=1)";
     final Context context = new EclipseJavaParser().parseJava(TypeAnnotatedSRC);
     MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
     context.accept(methodDeclarationVisitor);
@@ -60,9 +79,39 @@ public class JavaParserTest {
     for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
       final MethodDefinition definition = MethodDefinition.from(each);
       System.out.println(definition);
+
+      assertEquals(1, definition.getReturnType().getAnnotations().size());
+      for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
+          assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
+      }
     }
   }
 
+  @Test public void testTypeAnnotationWithClassPath() throws Exception {
+      final String expectedAnnotationStrValue =
+              "com.vesperin.base.TestingTypeAnnotation("
+              + "value=public static final com.vesperin.base.TestingTypeAnnotation.TestEnumValue TOP"
+              + ")";
+
+      final String workingDir = System.getProperty("user.dir");
+      final Context context = new JavaParserConfiguration()
+              .setClasspathEntries(Arrays.asList(Paths.get(workingDir, "bin").toString()))
+              .configure()
+              .parseJava(TypeAnnotatedNeedClassPathSRC);
+
+      MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
+      context.accept(methodDeclarationVisitor);
+
+      for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
+        final MethodDefinition definition = MethodDefinition.from(each);
+        System.out.println(definition);
+
+        assertEquals(1, definition.getReturnType().getAnnotations().size());
+        for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
+            assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
+        }
+      }
+    }
 
   @Test public void testBasicParsing() throws Exception {
 
