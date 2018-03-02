@@ -31,7 +31,7 @@ public interface JavaParser {
    * @throws RuntimeException if there is a parsing error.
    */
   default ParsedUnit parseJava(Context context){
-    for(ContextMatcher each : MatchMaker.generateUnitMatchers()){
+    for(ContextMatcher each : MatchMaker.generateUnitMatchers(this)){
       final ParsedUnit unit = each.matches(context);
       if(!unit.isEmptyUnit()){
         return unit;
