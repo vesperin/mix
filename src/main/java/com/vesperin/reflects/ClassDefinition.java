@@ -70,12 +70,13 @@ public class ClassDefinition {
   private final PackageDefinition packageDefinition;
   private final String typeName;
   private final String className;
-  private final String canonicalName;
   private final String simpleForm;
   private final TypeLiteral typeLiteral;
   private final boolean isDeprecated;
   private final boolean isAbstract;
   private final String reifiedCanonicalName;
+  private final Set<AnnotationDefinition> annotations;
+  private final String canonicalName;
 
   /**
    * Construct a new class definition for a given {@link Type}
@@ -84,6 +85,16 @@ public class ClassDefinition {
    */
   private ClassDefinition(Type type) {
     this(type, USE_LAMBDA_EXPRESSION);
+  }
+
+  /**
+   * Construct a new class definition for a given {@link Type}
+   *
+   * @param type the {@link Type} of interest.
+   * @param annotations type annotations
+   */
+  private ClassDefinition(Type type, Set<AnnotationDefinition> annotations) {
+    this(type,  notDotsPackageDefinitionFunction(type), USE_LAMBDA_EXPRESSION, annotations);
   }
 
   /**
@@ -105,23 +116,34 @@ public class ClassDefinition {
    * @param flag whether this class uses lambda expressions or not.
    */
   private ClassDefinition(Type type, String genericString, int flag) {
-    this(type, onlyFewPackageDefinitionFunction(genericString), flag);
+    this(type, onlyFewPackageDefinitionFunction(genericString), flag, new HashSet<>());
   }
 
-  /**
-   * Construct a new class definition.
-   *
-   * @param type the {@link Type} of interest.
-   * @param pkgFunction package definition function.
-   * @param flag whether this class uses lambda expressions or not.
-   */
+  private ClassDefinition(Type type, String genericString, int flag, Set<AnnotationDefinition> annotations) {
+    this(type, onlyFewPackageDefinitionFunction(genericString), flag, annotations);
+  }
+
   private ClassDefinition(Type type, Function<PackageDefinition, String> pkgFunction, int flag) {
+    this(type, pkgFunction, flag, new HashSet<>());
+  }
+
+   /**
+    * Construct a new class definition.
+    *
+    * @param type the {@link Type} of interest.
+    * @param pkgFunction package definition function.
+    * @param flag whether this class uses lambda expressions or not.
+    * @param annotations type annotations
+    */
+  private ClassDefinition(Type type, Function<PackageDefinition, String> pkgFunction, int flag, Set<AnnotationDefinition> annotations) {
 
     this.packageDefinition = PackageDefinition.from(type);
 
 
     this.typeLiteral = TypeLiteral.from(type);
     this.isAbstract  = isAbstract(type);
+
+    this.annotations = new HashSet<>(annotations);
 
     if (typeLiteral == TypeLiteral.VOID) {
       this.typeName = "()";
@@ -138,10 +160,12 @@ public class ClassDefinition {
         this.simpleForm = typeName;
       }
 
+      final String toStringAnnotation = annotations.toString();
+
       final String packageToString = packageDefinition.toString();
       this.canonicalName = (packageToString.isEmpty()
-        ? typeName
-        : packageToString + "." + typeName
+        ? (toStringAnnotation + " ") + typeName
+        : (toStringAnnotation + " ") + packageToString + "." + this.typeName
       );
 
       this.reifiedCanonicalName = canonicalName.replace(genericsSubstring(canonicalName), "");
@@ -164,7 +188,7 @@ public class ClassDefinition {
    * @param isAbstract true if this class is an abstract class; false otherwise.
    */
   private ClassDefinition(PackageDefinition pkgDef, String typeName,
-    boolean isDeprecated, boolean isAbstract){
+    boolean isDeprecated, boolean isAbstract, Set<AnnotationDefinition> annotations){
 
     this.packageDefinition  = pkgDef;
     this.typeLiteral        = TypeLiteral.voidOrClass(typeName);
@@ -174,13 +198,18 @@ public class ClassDefinition {
     this.simpleForm         = this.typeName;
 
     this.className    = (this.typeName.contains("<") && this.typeName.contains(">")
-      ? typeName.replace("<(.+?)>", "")//this.typeName.substring(0, this.typeName.lastIndexOf("<"))
+      ? typeName.replace("<(.+?)>", "")
       : typeName);
+
+
+    this.annotations = new HashSet<>(annotations);
+
+    final String toStringAnnotation = annotations.toString();
 
     final String packageToString = this.packageDefinition.toString();
     this.canonicalName = (packageToString.isEmpty()
-      ? this.typeName
-      : packageToString + "." + this.typeName
+      ? (toStringAnnotation + " ") + typeName
+      : (toStringAnnotation + " ") + packageToString + "." + this.typeName
     );
 
     this.reifiedCanonicalName = this.canonicalName
@@ -271,8 +300,15 @@ public class ClassDefinition {
     }
   }
 
+  public static ClassDefinition from(
+    String pkgString, String candidateTypeName, boolean isDeprecated, boolean isAbstract) {
+
+    return from(pkgString, candidateTypeName, isDeprecated, isAbstract, new HashSet<>());
+  }
+
+
   public static ClassDefinition from(String pkgString, String candidateTypeName,
-    boolean isDeprecated, boolean isAbstract) {
+    boolean isDeprecated, boolean isAbstract, Set<AnnotationDefinition> annotations) {
 
 
     if("void".equals(candidateTypeName)) {
@@ -288,13 +324,17 @@ public class ClassDefinition {
 
     final PackageDefinition pkgDef = PackageDefinition.from(packageName);
 
-    return new ClassDefinition(pkgDef, typeName, isDeprecated, isAbstract);
+    return new ClassDefinition(pkgDef, typeName, isDeprecated, isAbstract, annotations);
   }
 
-  public static ClassDefinition from(Type type) {
+  public static ClassDefinition from(Type type){
+    return from(type, new HashSet<>());
+  }
+
+  public static ClassDefinition from(Type type, Set<AnnotationDefinition> annotations) {
     if (type instanceof ParameterizedType || type instanceof TypeVariable ||
       type instanceof GenericArrayType || type instanceof Class) {
-      return new ClassDefinition(type);
+      return new ClassDefinition(type, annotations);
     } else {
       throw new IllegalArgumentException("unknown subtype of Type: " + type.getClass());
     }
@@ -316,7 +356,11 @@ public class ClassDefinition {
     final boolean isClassDeprecated = typeBinding.isDeprecated();
     final boolean isClassAbstract = Modifier.isAbstract(typeBinding.getModifiers());
 
-    return ClassDefinition.from(pkgDef, typeName, isClassDeprecated,  isClassAbstract);
+    final Set<AnnotationDefinition> annotations = Immutable.setOf(
+      Arrays.stream(typeBinding.getTypeAnnotations()).map(AnnotationDefinition::annotationDefinition)
+    );
+
+    return ClassDefinition.from(pkgDef, typeName, isClassDeprecated,  isClassAbstract, annotations);
   }
 
   static ClassDefinition classDefinition(ITypeBinding typeBinding){
@@ -380,22 +424,8 @@ public class ClassDefinition {
     final String[] result = new String[2];
 
     String packageName;
-    String typeName = candidateTypeName;
+    String typeName = Expect.nonNull(candidateTypeName);
     if(isPrimitive(typeName) && "".equals(pkgString)){
-//      final String pn = objectifyPrimitiveType(typeName);
-//      final int typeNameIndex = pn.lastIndexOf('.');
-//
-//      if(typeNameIndex != -1)  {
-//        packageName = pn.substring(0, typeNameIndex);
-//        typeName    = pn.substring(typeNameIndex + 1, pn.length());
-//        result[0]   = packageName;
-//        result[1]   = typeName;
-//
-//      } else {
-//        packageName = pkgString;
-//        result[0]   = packageName;
-//        result[1]   = typeName;
-//      }
       packageName = pkgString;
       result[0]   = packageName;
       result[1]   = typeName;
@@ -414,12 +444,15 @@ public class ClassDefinition {
       PackageDefinition.from("java.lang"),
       "Void",
       false,
-      false
+      false,
+      Immutable.set()
     );
   }
 
   static ClassDefinition missingClassDefinition(){
-    return new ClassDefinition(PackageDefinition.from(""), missingType(), false, false);
+    return new ClassDefinition(
+      PackageDefinition.from(""), missingType(), false, false, Immutable.set()
+    );
   }
 
   private static ClassDefinition forceClassNameFormEvenIfFunctionalInterface(Type type) {
@@ -743,6 +776,10 @@ public class ClassDefinition {
     return simpleForm;
   }
 
+  public Set<AnnotationDefinition> getAnnotations(){
+    return Immutable.setOf(annotations);
+  }
+
   private Optional<String> lambdaIfFunctionalInterface(Type type) {
     if (typeLiteral != TypeLiteral.FUNCTIONAL_INTERFACE) {
       return Optional.empty();
@@ -781,6 +818,7 @@ public class ClassDefinition {
       ", isDeprecated='" + isDeprecated() + '\'' +
       ", isAbstract='" + isDeprecated() + '\'' +
       ", type=" + typeLiteral +
+      (!annotations.isEmpty() ? (", annotatedWith=" + annotations) : "") +
       ')';
   }
 

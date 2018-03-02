@@ -1,11 +1,11 @@
 package com.vesperin.base;
 
+import com.vesperin.utils.Expect;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 
-import java.util.*;
+import java.util.Map;
 
 /**
  * @author Huascar Sanchez
@@ -16,22 +16,20 @@ public class EclipseJavaParser implements JavaParser {
   private final ASTParser astParser;
 
   /**
-   * Construct a new Eclipse Java parser
+   * Construct a new Eclipse Java parser with a default configuration.
    */
   public EclipseJavaParser(){
-    this(ASTParser.newParser(AST.JLS8));
+    this(new JavaParserConfiguration());
   }
 
   /**
    * Construct a new Eclipse Java parser.
    *
-   * @param astParser Eclipse JDT's ASTParser object.
+   * @param configuration JavaParser's configuration
    */
-  EclipseJavaParser(ASTParser astParser){
-    this.astParser = astParser;
-
-    this.astParser.setResolveBindings(true);
-    this.astParser.setEnvironment(null, null, null, true);
+  EclipseJavaParser(JavaParserConfiguration configuration){
+    final JavaParserConfiguration nonNull = Expect.nonNull(configuration);
+    this.astParser = nonNull.getAstParser();
 
     final Map options = JavaCore.getOptions();
     JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);

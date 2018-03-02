@@ -1,6 +1,9 @@
 package com.vesperin.base;
 
+import com.vesperin.base.visitors.MethodDeclarationVisitor;
+import com.vesperin.reflects.MethodDefinition;
 import com.vesperin.utils.Immutable;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,7 +15,7 @@ import static org.junit.Assert.fail;
  * @author Huascar Sanchez
  */
 public class JavaParserTest {
-  static final Source SRC = Source.from("Foo",
+  private static final Source SRC = Source.from("Foo",
     String.join("\n",
       Immutable.listOf(Arrays.asList(
         "public class Foo {"
@@ -25,10 +28,50 @@ public class JavaParserTest {
   );
 
 
+  private static final Source TypeAnnotatedSRC = Source.from("Example",
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
+        ""
+        ,"import java.lang.annotation.ElementType;"
+        ,"import java.lang.annotation.Retention;"
+        ,"import java.lang.annotation.RetentionPolicy;"
+        ,"import java.lang.annotation.Target;"
+        ,""
+        ,"public class Example {"
+        , " @Retention(RetentionPolicy.RUNTIME)"
+        , " @Target({ ElementType.TYPE_USE,"
+        , " ElementType.TYPE_PARAMETER })"
+        , " @interface TestingAll{"
+        , "   String[] value();"
+        , " }"
+        , " public @TestingAll(\"1\") int exit(){"
+        , "   return 1;"
+        , " }"
+        , "}"
+        ))
+          )
+  );
+
+  @Test public void testTypeAnnotation() throws Exception {
+    final Context context = new EclipseJavaParser().parseJava(TypeAnnotatedSRC);
+    MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
+    context.accept(methodDeclarationVisitor);
+
+    for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
+      final MethodDefinition definition = MethodDefinition.from(each);
+      System.out.println(definition);
+    }
+  }
+
+
   @Test public void testBasicParsing() throws Exception {
 
-
-    final JavaParser parser = new EclipseJavaParser();
+    final JavaParser parser = new JavaParserConfiguration()
+      .setClasspathEntries(null)
+      .setSourcepathEntries(null)
+      .setEncodings(null)
+      .setBindingResolution(true)
+      .configure();
 
     assertNotNull(parser);
 

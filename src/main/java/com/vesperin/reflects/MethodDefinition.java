@@ -1,26 +1,22 @@
 package com.vesperin.reflects;
 
+import com.vesperin.base.Jdt;
 import com.vesperin.utils.Expect;
 import com.vesperin.utils.Immutable;
-import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
-import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.vesperin.reflects.ClassDefinition.classDefinition;
@@ -142,7 +138,7 @@ public class MethodDefinition {
     );
 
     final Set<AnnotationDefinition> annotations = Immutable.setOf(
-      Arrays.stream(methodBinding.getAnnotations()).map(MethodDefinition::annotationDefinition)
+      Arrays.stream(methodBinding.getAnnotations()).map(AnnotationDefinition::annotationDefinition)
     );
 
     final List<ClassDefinition> typeParameters = Immutable.listOf(
@@ -187,7 +183,7 @@ public class MethodDefinition {
     );
 
     final Set<AnnotationDefinition> annotations = Immutable.setOf(
-      Arrays.stream(methodBinding.getAnnotations()).map(MethodDefinition::annotationDefinition)
+      Arrays.stream(methodBinding.getAnnotations()).map(AnnotationDefinition::annotationDefinition)
     );
 
     final List<ClassDefinition> typeParameters = Immutable.listOf(
@@ -198,7 +194,6 @@ public class MethodDefinition {
     final boolean isDeprecated  = methodBinding.isDeprecated();
 
     final ClassDefinition    declaringClass = classDefinition(unit, methodBinding.getDeclaringClass());
-
 
     final ClassDefinition returnType = returnClassDefinition(unit, methodBinding);
 
@@ -229,28 +224,6 @@ public class MethodDefinition {
     return new MethodDefinition(methodName, arguments,
       returnType, annotations, exceptions, typeParameters,
       modifiers, isDeprecated, declaringClass);
-  }
-
-  private static AnnotationDefinition annotationDefinition(IAnnotationBinding annotationBinding){
-    final StringBuilder annotation = new StringBuilder(annotationBinding.getAnnotationType().getQualifiedName());
-    annotation.append("(");
-
-    final List<String> entries = new ArrayList<>();
-
-    for(IMemberValuePairBinding each : annotationBinding.getDeclaredMemberValuePairs()){
-      final String key = each.getName();
-      final String val = String.valueOf(each.getValue());
-
-      final String entry = key + "=" + val;
-      entries.add(entry);
-
-    }
-
-    annotation.append(entries.toString().replace("[", "").replace("]", ""));
-
-    annotation.append(")");
-
-    return new AnnotationDefinition(annotation.toString());
   }
 
   /**
@@ -296,7 +269,6 @@ public class MethodDefinition {
 
     final String          methodName     = method.getName();
     final ClassDefinition returnType     = missingReturnTypeOrElse(method);
-
     final ClassDefinition declaringClass = ClassDefinition.forceGeneric(method.getDeclaringClass());
 
     final Set<AnnotationDefinition> annotations = Immutable.setOf(
@@ -322,7 +294,15 @@ public class MethodDefinition {
 
   private static ClassDefinition missingReturnTypeOrElse(Method method){
     try {
-      return ClassDefinition.from(method.getGenericReturnType());
+      if (method.getAnnotatedReturnType().getAnnotations().length > 0){
+        final Annotation[] annotations = method.getAnnotatedReturnType().getAnnotations();
+        final Set<AnnotationDefinition> definitions = Arrays.stream(annotations)
+          .map(AnnotationDefinition::new)
+          .collect(Collectors.toSet());
+        return ClassDefinition.from(method.getGenericReturnType(), definitions);
+      } else {
+        return ClassDefinition.from(method.getGenericReturnType());
+      }
     } catch (NoClassDefFoundError ignored){
       return ClassDefinition.missingClassDefinition();
     }
