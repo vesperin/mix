@@ -23,9 +23,9 @@ public abstract class AbstractContextMatcher implements ContextMatcher {
    *
    * @param mode the parsing mode.
    */
-  protected AbstractContextMatcher(int mode){
+  protected AbstractContextMatcher(int mode, JavaParser javaParser){
     this.mode     = mode;
-    this.parser   = new EclipseJavaParser();
+    this.parser   = javaParser;
   }
 
   protected static ParsedUnit bindProgramUnitToContext(Context context, ParsedUnit unit){
