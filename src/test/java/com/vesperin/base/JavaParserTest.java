@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -76,15 +77,7 @@ public class JavaParserTest {
     MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
     context.accept(methodDeclarationVisitor);
 
-    for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
-      final MethodDefinition definition = MethodDefinition.from(each);
-      System.out.println(definition);
-
-      assertEquals(1, definition.getReturnType().getAnnotations().size());
-      for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
-        assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
-      }
-    }
+    testMethodDeclarations(expectedAnnotationStrValue, methodDeclarationVisitor);
   }
 
   @Test public void testTypeAnnotationWithClassPath() throws Exception {
@@ -95,23 +88,27 @@ public class JavaParserTest {
 
       final String workingDir = System.getProperty("user.dir");
       final Context context = new JavaParserConfiguration()
-          .setClasspathEntries(Arrays.asList(Paths.get(workingDir, "bin").toString()))
+          .setClasspathEntries(Collections.singletonList(Paths.get(workingDir, "target/test-classes").toString()))
           .configure()
           .parseJava(TypeAnnotatedNeedClassPathSRC);
 
       MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
       context.accept(methodDeclarationVisitor);
 
-      for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
-        final MethodDefinition definition = MethodDefinition.from(each);
-        System.out.println(definition);
+    testMethodDeclarations(expectedAnnotationStrValue, methodDeclarationVisitor);
+  }
 
-        assertEquals(1, definition.getReturnType().getAnnotations().size());
-        for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
-          assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
-        }
+  private static void testMethodDeclarations(String expectedAnnotationStrValue, MethodDeclarationVisitor methodDeclarationVisitor) {
+    for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
+      final MethodDefinition definition = MethodDefinition.from(each);
+      System.out.println(definition);
+
+      assertEquals(1, definition.getReturnType().getAnnotations().size());
+      for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
+        assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
       }
     }
+  }
 
   @Test public void testBasicParsing() throws Exception {
 
