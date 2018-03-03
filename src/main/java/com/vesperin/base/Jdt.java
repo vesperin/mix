@@ -1,12 +1,9 @@
-package com.vesperin.base.utils;
+package com.vesperin.base;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.vesperin.base.Context;
-import com.vesperin.base.Source;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.visitors.ImportReferencesVisitor;
+import com.vesperin.utils.Sets;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -45,7 +42,7 @@ public class Jdt {
   }
 
   private static List<ASTNode> convert(List list) {
-    final List<ASTNode> result = Lists.newArrayList();
+    final List<ASTNode> result = new ArrayList<>();
     for (Object each : list) {
       final ASTNode node = (ASTNode) each;
       if (!(node instanceof Javadoc)) {
@@ -79,7 +76,7 @@ public class Jdt {
 
 
   public static List<ASTNode> getChildren(ASTNode node) {
-    final List<ASTNode> result = Lists.newArrayList();
+    final List<ASTNode> result = new ArrayList<>();
 
     if (node == null) {
       return result;
@@ -137,7 +134,7 @@ public class Jdt {
   }
 
   public static List<ASTNode> getSwitchCases(SwitchStatement node) {
-    final List<ASTNode> result = Lists.newArrayList();
+    final List<ASTNode> result = new ArrayList<>();
     final List<ASTNode> elements = typeSafeList(ASTNode.class, node.statements());
     elements.stream().filter(element -> element instanceof SwitchCase).forEach(element -> {
       final SwitchCase switchCase = SwitchCase.class.cast(element);
@@ -233,15 +230,14 @@ public class Jdt {
 
 
   public static <T> List<T> typeSafeList(Class<T> klass, List<?> raw) {
-    return Lists.transform(
-      typeSafeList(raw),
-      klass::cast
-    );
+    final List<T> result = new ArrayList<>();
+    raw.forEach(r -> result.add(klass.cast(r)));
+    return result;
   }
 
   public static List<Object> typeSafeList(List<?> raw) {
     final List<Object> typeSafeList = new ArrayList<>();
-    raw.forEach(typeSafeList::add);
+    typeSafeList.addAll(raw);
 
     return typeSafeList;
   }

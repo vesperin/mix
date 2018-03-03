@@ -1,11 +1,10 @@
 package com.vesperin.base.locators;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.vesperin.base.Context;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.utils.Expect;
+import com.vesperin.base.Jdt;
 import com.vesperin.base.visitors.StatementsSelectionVisitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -25,7 +24,10 @@ abstract class AbstractProgramUnit implements ProgramUnit {
    * @param identifier the identifier of the program unit.
    */
   AbstractProgramUnit(String identifier){
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(identifier), "Invalid identifier");
+    Expect.validArgument(
+      identifier != null && !identifier.isEmpty(), "Invalid identifier"
+    );
+
     this.name = identifier;
   }
 

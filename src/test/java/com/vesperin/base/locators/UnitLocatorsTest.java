@@ -1,15 +1,15 @@
 package com.vesperin.base.locators;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.vesperin.base.Context;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.Source;
+import com.vesperin.utils.Immutable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static com.vesperin.base.locations.Locations.createLocation;
@@ -22,14 +22,14 @@ import static org.junit.Assert.assertThat;
  */
 public class UnitLocatorsTest {
   static final Source SRC = Source.from("Foo",
-    Joiner.on("\n").join(
-      ImmutableList.of(
+    String.join("\n",
+      Immutable.listOf(Arrays.asList(
         "public class Foo {"
         , " public int exit(){"
         , "   return 1;"
         , " }"
         , "}"
-      )
+      ))
     )
   );
 
@@ -66,15 +66,15 @@ public class UnitLocatorsTest {
 
   @Test public void testMultipleOccurrencesSelection() throws Exception {
     final Source src = Source.from("Foo",
-      Joiner.on("\n").join(
-        ImmutableList.of(
+      String.join("\n",
+        Immutable.listOf(Arrays.asList(
           "public class Foo {"
           , " private final int code = 0; "
           , " public int exit(){"
           , "   return code;"
           , " }"
           , "}"
-        )
+        ))
       )
     );
 
@@ -91,8 +91,8 @@ public class UnitLocatorsTest {
 
   @Test public void testAllMethodsLocation() throws Exception {
     final Source src = Source.from("Foo",
-      Joiner.on("\n").join(
-        ImmutableList.of(
+      String.join("\n",
+        Immutable.listOf(Arrays.asList(
           "public class Foo {"
           , " private final int code = 0; "
           , " public int exit(){"
@@ -103,7 +103,7 @@ public class UnitLocatorsTest {
           , "   return code;"
           , " }"
           , "}"
-        )
+        ))
       )
     );
 

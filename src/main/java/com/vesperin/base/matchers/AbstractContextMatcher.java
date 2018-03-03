@@ -2,7 +2,7 @@ package com.vesperin.base.matchers;
 
 import com.vesperin.base.Context;
 import com.vesperin.base.ParsedUnit;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.base.Jdt;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.EclipseJavaParser;
 import com.vesperin.base.JavaParser;
@@ -23,9 +23,9 @@ public abstract class AbstractContextMatcher implements ContextMatcher {
    *
    * @param mode the parsing mode.
    */
-  protected AbstractContextMatcher(int mode){
+  protected AbstractContextMatcher(int mode, JavaParser javaParser){
     this.mode     = mode;
-    this.parser   = new EclipseJavaParser();
+    this.parser   = javaParser;
   }
 
   protected static ParsedUnit bindProgramUnitToContext(Context context, ParsedUnit unit){

@@ -1,13 +1,15 @@
 package com.vesperin.base.matchers;
 
-import com.google.common.collect.ImmutableList;
 import com.vesperin.base.Context;
+import com.vesperin.base.JavaParser;
 import com.vesperin.base.ParsedUnit;
-import com.vesperin.base.utils.Jdt;
+import com.vesperin.utils.Immutable;
+import com.vesperin.base.Jdt;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,17 +23,20 @@ public class MatchMaker {
     );
   }
 
-  public static List<ContextMatcher> generateUnitMatchers(){
-    return ImmutableList.of(
-        new ValidCompilationUnitMatching(),
-        new MissingClassDeclaration(),
-        new MissingClassAndMethodBodyDeclarations()
+  public static List<ContextMatcher> generateUnitMatchers(JavaParser javaParser){
+
+    final List<ContextMatcher> safeList = Arrays.asList(
+      new ValidCompilationUnitMatching(javaParser),
+      new MissingClassDeclaration(javaParser),
+      new MissingClassAndMethodBodyDeclarations(javaParser)
     );
+
+    return Immutable.listOf(safeList);
   }
 
   static class ValidCompilationUnitMatching extends AbstractContextMatcher {
-    ValidCompilationUnitMatching() {
-      super(ASTParser.K_COMPILATION_UNIT);
+    ValidCompilationUnitMatching(JavaParser javaParser) {
+      super(ASTParser.K_COMPILATION_UNIT, javaParser);
     }
 
     @Override public ParsedUnit matches(Context context) {
@@ -52,8 +57,8 @@ public class MatchMaker {
   }
 
   static class MissingClassDeclaration extends AbstractContextMatcher {
-    MissingClassDeclaration(){
-      super(ASTParser.K_CLASS_BODY_DECLARATIONS);
+    MissingClassDeclaration(JavaParser javaParser){
+      super(ASTParser.K_CLASS_BODY_DECLARATIONS, javaParser);
     }
 
     @Override public ParsedUnit matches(Context context) {
@@ -72,8 +77,8 @@ public class MatchMaker {
   }
 
   static class MissingClassAndMethodBodyDeclarations extends AbstractContextMatcher {
-    MissingClassAndMethodBodyDeclarations(){
-      super(ASTParser.K_STATEMENTS);
+    MissingClassAndMethodBodyDeclarations(JavaParser javaParser){
+      super(ASTParser.K_STATEMENTS, javaParser);
     }
 
     @Override public ParsedUnit matches(Context context) {

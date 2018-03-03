@@ -1,4 +1,4 @@
-package com.vesperin.base.utils;
+package com.vesperin.base;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;

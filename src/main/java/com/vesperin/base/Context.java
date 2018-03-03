@@ -1,6 +1,5 @@
 package com.vesperin.base;
 
-import com.google.common.collect.Lists;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.locators.ClassUnit;
@@ -11,7 +10,6 @@ import com.vesperin.base.locators.ProgramUnitLocator;
 import com.vesperin.base.locators.SelectedUnit;
 import com.vesperin.base.locators.UnitLocation;
 import com.vesperin.base.locators.UnitLocator;
-import com.vesperin.base.utils.Jdt;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -271,7 +269,7 @@ public class Context {
   }
 
   public static List<SyntaxIssue> filterSyntaxIssues(List<SyntaxIssue> issues, boolean ignoredTypeResolutionErrors){
-    final List<SyntaxIssue> errors = Lists.newArrayList(issues);
+    final List<SyntaxIssue> errors = new ArrayList<>(issues);
     if(ignoredTypeResolutionErrors){
       errors.removeIf(s -> s.getMessage().contains("cannot be resolved"));
     }

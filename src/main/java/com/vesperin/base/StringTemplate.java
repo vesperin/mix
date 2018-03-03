@@ -1,4 +1,4 @@
-package com.vesperin.base.utils;
+package com.vesperin.base;
 
 import java.util.Map;
 import java.util.regex.Matcher;
