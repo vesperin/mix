@@ -2,7 +2,11 @@ package com.vesperin.base;
 
 import com.vesperin.utils.Immutable;
 import com.vesperin.utils.Iterables;
+import com.vesperin.utils.Strings;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Huascar Sanchez
@@ -105,6 +110,25 @@ public class Source {
 
     final String newContent = StringTemplate.process(template.getContent(), options);
     return Source.from(template, newContent);
+  }
+
+  /**
+   * Converts a file into a source object.
+   *
+   * @param file the file to be converted.
+   * @return a new source code object.
+   */
+  public static Source from(File file) {
+    try {
+      final String name     = Strings.fileNameWithoutExtension(file);
+
+      final String content  = Files.readAllLines(file.toPath()).stream()
+        .collect(Collectors.joining("\n"));
+
+      return Source.from(name, content);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

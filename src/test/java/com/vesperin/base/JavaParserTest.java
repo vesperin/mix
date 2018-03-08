@@ -1,15 +1,23 @@
 package com.vesperin.base;
 
+import com.vesperin.base.locators.UnitLocation;
 import com.vesperin.base.visitors.MethodDeclarationVisitor;
 import com.vesperin.reflects.AnnotationDefinition;
 import com.vesperin.reflects.MethodDefinition;
+import com.vesperin.utils.Expect;
 import com.vesperin.utils.Immutable;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -87,10 +95,21 @@ public class JavaParserTest {
           + ")";
 
       final String workingDir = System.getProperty("user.dir");
-      final Context context = new JavaParserConfiguration()
-          .setClasspathEntries(Collections.singletonList(Paths.get(workingDir, "target/test-classes").toString()))
-          .configure()
-          .parseJava(TypeAnnotatedNeedClassPathSRC);
+      final JavaParser parser = new EclipseJavaParser(new Configuration() {
+        @Override public void configure(JavaParser parser) {
+          configureCompilerOptions(parser);
+          configureEnvironment(
+            Collections.singletonList(Paths.get(workingDir, "target/test-classes").toString()),
+            null,
+            null,
+            parser
+          );
+          configureBindings(parser);
+          cleanupAfter(parser);
+        }
+      });
+
+      final Context context = parser.parseJava(TypeAnnotatedNeedClassPathSRC);
 
       MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
       context.accept(methodDeclarationVisitor);
@@ -110,14 +129,24 @@ public class JavaParserTest {
     }
   }
 
+  @Test public void testJavaCodeFromResources() throws Exception {
+    Path file  = Paths.get(JavaParserTest.class.getResource("/JamaUtils.java").toURI());
+    final Source code = Source.from(file.toFile());
+    final Context context = new EclipseJavaParser().parseJava(code);
+    assertNotNull(context);
+
+    for (UnitLocation each : context.locateMethods()){
+      final MethodDeclaration declaration = (MethodDeclaration) each.getUnitNode();
+      final IMethodBinding binding = declaration.resolveBinding();
+      assertNotNull(binding);
+    }
+
+  }
+
+
   @Test public void testBasicParsing() throws Exception {
 
-    final JavaParser parser = new JavaParserConfiguration()
-      .setClasspathEntries(null)
-      .setSourcepathEntries(null)
-      .setEncodings(null)
-      .setBindingResolution(true)
-      .configure();
+    final JavaParser parser = new EclipseJavaParser();
 
     assertNotNull(parser);
 

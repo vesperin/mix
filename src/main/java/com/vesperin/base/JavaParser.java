@@ -2,13 +2,25 @@ package com.vesperin.base;
 
 import com.vesperin.base.matchers.ContextMatcher;
 import com.vesperin.base.matchers.MatchMaker;
+import org.eclipse.jdt.core.dom.ASTParser;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
  * @author Huascar Sanchez
  */
 public interface JavaParser {
+  /**
+   * @return a JavaParser's configuration.
+   */
+  Configuration getConfiguration();
+
+  /**
+   * @return the underlying JDT parser.
+   */
+  ASTParser getAstParser();
+
   /**
    * Parses a source file.
    *
