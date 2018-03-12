@@ -29,7 +29,7 @@ public class EclipseJavaParser implements JavaParser {
   public EclipseJavaParser(Configuration configuration){
     this.configuration = Expect.nonNull(configuration);;
     this.astParser = ASTParser.newParser(AST.JLS8);
-    configuration.configure(this);
+    this.configuration.configure(this);
   }
 
 
