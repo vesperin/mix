@@ -1,11 +1,9 @@
 package com.vesperin.base;
 
 import com.vesperin.utils.Expect;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
-
-import java.util.Map;
 
 /**
  * @author Huascar Sanchez
@@ -14,12 +12,13 @@ public class EclipseJavaParser implements JavaParser {
   private static final String JAVA_EXTENSION = ".java";
 
   private final ASTParser astParser;
+  private final Configuration configuration;
 
   /**
    * Construct a new Eclipse Java parser with a default configuration.
    */
   public EclipseJavaParser(){
-    this(new JavaParserConfiguration());
+    this(new DefaultConfiguration());
   }
 
   /**
@@ -27,13 +26,20 @@ public class EclipseJavaParser implements JavaParser {
    *
    * @param configuration JavaParser's configuration
    */
-  EclipseJavaParser(JavaParserConfiguration configuration){
-    final JavaParserConfiguration nonNull = Expect.nonNull(configuration);
-    this.astParser = nonNull.getAstParser();
+  public EclipseJavaParser(Configuration configuration){
+    this.configuration = Expect.nonNull(configuration);;
+    this.astParser = ASTParser.newParser(AST.JLS8);
+    this.configuration.configure(this);
+  }
 
-    final Map options = JavaCore.getOptions();
-    JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
-    astParser.setCompilerOptions(options);
+
+
+  @Override public Configuration getConfiguration() {
+    return configuration;
+  }
+
+  @Override public ASTParser getAstParser() {
+    return this.astParser;
   }
 
   @Override public ParsedUnit parseJava(Context context, int mode) {
@@ -61,6 +67,12 @@ public class EclipseJavaParser implements JavaParser {
       );
     } catch (RuntimeException error){
       throw new RuntimeException("Error: Unable to parse!");
+    }
+  }
+
+  private static class DefaultConfiguration implements Configuration {
+    @Override public void configure(JavaParser parser) {
+      defaultSettings(parser);
     }
   }
 

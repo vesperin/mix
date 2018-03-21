@@ -1,5 +1,7 @@
 package com.vesperin.utils;
 
+import java.io.File;
+
 /**
  * @author Huascar Sanchez
  */
@@ -38,6 +40,12 @@ public class Strings {
     }
 
     return toChange.equals(text) ? BLANK_SPACE : toChange;
+  }
+
+  public static String fileNameWithoutExtension(File file){
+    final String fileName = Expect.nonNull(file).getName();
+    int dotIndex = fileName.lastIndexOf('.');
+    return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
   }
 
 }

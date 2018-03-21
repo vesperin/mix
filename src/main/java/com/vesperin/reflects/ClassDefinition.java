@@ -160,12 +160,13 @@ public class ClassDefinition {
         this.simpleForm = typeName;
       }
 
-      final String toStringAnnotation = annotations.toString();
+      final String toStringAnnotation = (annotations.isEmpty()
+        ? "" : annotations.toString() + " ");
 
       final String packageToString = packageDefinition.toString();
       this.canonicalName = (packageToString.isEmpty()
-        ? (toStringAnnotation + " ") + typeName
-        : (toStringAnnotation + " ") + packageToString + "." + this.typeName
+        ? (toStringAnnotation) + typeName
+        : (toStringAnnotation) + packageToString + "." + this.typeName
       );
 
       this.reifiedCanonicalName = canonicalName.replace(genericsSubstring(canonicalName), "");
@@ -204,12 +205,13 @@ public class ClassDefinition {
 
     this.annotations = new HashSet<>(annotations);
 
-    final String toStringAnnotation = annotations.toString();
+    final String toStringAnnotation = (annotations.isEmpty()
+      ? "" : annotations.toString() + " ");
 
     final String packageToString = this.packageDefinition.toString();
     this.canonicalName = (packageToString.isEmpty()
-      ? (toStringAnnotation + " ") + typeName
-      : (toStringAnnotation + " ") + packageToString + "." + this.typeName
+      ? (toStringAnnotation) + typeName
+      : (toStringAnnotation) + packageToString + "." + this.typeName
     );
 
     this.reifiedCanonicalName = this.canonicalName
