@@ -150,14 +150,22 @@ public class MethodDefinition {
 
     final ClassDefinition    declaringClass = classDefinition(methodBinding.getDeclaringClass());
 
-
-    final ClassDefinition returnType = classDefinition(methodBinding.getReturnType());
+    // if name is a Java identifier (e.g., E), then default to Object.class.
+    final String rtQualifiedName = methodBinding.getReturnType().getQualifiedName();
+    final ClassDefinition returnType = !isJavaIdentifier(rtQualifiedName)
+      ? classDefinition(methodBinding.getReturnType())
+      : ClassDefinition.forceGeneric(Object.class);
 
     return from(methodName, arguments,
       returnType, annotations, exceptions, typeParameters,
       modifiers, isDeprecated, declaringClass);
 
 
+  }
+
+  private static boolean isJavaIdentifier(String qualifiedName) {
+    final boolean isSingleChar = qualifiedName.length() == 1;
+    return isSingleChar && Character.isJavaIdentifierPart(qualifiedName.charAt(0));
   }
 
   /**
@@ -482,5 +490,9 @@ public class MethodDefinition {
   @Override public String toString() {
     return "MethodDefinition {"
       + getFullForm() + "}.";
+  }
+
+  public static void main(String[] args) {
+    System.out.println(isJavaIdentifier("E"));
   }
 }

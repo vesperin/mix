@@ -1,24 +1,17 @@
 package com.vesperin.utils;
 
-import com.vesperin.base.Context;
-import com.vesperin.base.EclipseJavaParser;
-import com.vesperin.base.JavaParser;
-import com.vesperin.base.Jdt;
-import com.vesperin.base.ScopeAnalyser;
-import com.vesperin.base.Source;
-import com.vesperin.base.SourceFormat;
+import com.vesperin.base.*;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.utils.Immutable;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.IBinding;
+import com.vesperin.base.visitors.MethodDeclarationVisitor;
+import com.vesperin.base.visitors.SkeletalVisitor;
+import org.eclipse.jdt.core.dom.*;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Huascar Sanchez
@@ -56,6 +49,84 @@ public class UtilsTest {
 
   }
 
+
+  @Test public void testTypeNormalization() throws Exception {
+    final JavaParser parser = new EclipseJavaParser();
+
+    final Source src = Source.from("Foo",
+      String.join("\n",
+        Immutable.listOf(Arrays.asList(
+          "public class Foo {"
+          , "  public List<String> exit() {"
+          , "    final List<String> a = new TypeNode<ArrayList<Data>>(new ArrayList<>()){}.list();"
+          , "    return a;"
+          , "  }"
+          , "}"
+        ))
+      )
+    );
+
+    final Context context = parser.parseJava(src);
+    final InvokesVisitor invokesVisitor = new InvokesVisitor();
+    context.accept(invokesVisitor);
+
+    for(MethodInvocation invoke : invokesVisitor.invocationSet()){
+      final Expression left = invoke.getExpression();
+      assertNotNull(left);
+
+      final ITypeBinding actualType = left.resolveTypeBinding();
+      assertNotNull(actualType);
+
+      final ITypeBinding currentType = Jdt.normalizeTypeBinding(actualType);
+
+      assertNotEquals(actualType, currentType);
+    }
+
+  }
+
+  @Test public void testTypeNormalization2() throws Exception {
+    final Source src = Source.from("Foo",
+      String.join("\n",
+        Immutable.listOf(Arrays.asList(
+          "import java.util.Objects;",
+          "public class Foo {"
+          , "  public int exit() {"
+          , "    final int hash = Objects.hash(1);"
+          , "    return hash;"
+          , "  }"
+          , "}"
+        ))
+      )
+    );
+
+    final JavaParser parser = new EclipseJavaParser();
+    final Context context = parser.parseJava(src);
+
+    final MethodDeclarationVisitor visitor = new MethodDeclarationVisitor();
+    context.accept(visitor);
+
+    for (MethodDeclaration each : visitor.getMethodDeclarations()){
+
+      final InvokesVisitor invokesVisitor = new InvokesVisitor();
+      each.accept(invokesVisitor);
+
+      for(MethodInvocation invocation : invokesVisitor.invocationSet()){
+
+        final IMethodBinding binding = invocation.resolveMethodBinding();
+        assertNotNull(binding);
+
+        final ITypeBinding returnBinding = binding.getReturnType();
+        assertNotNull(binding);
+
+        final ITypeBinding currentReturnBinding = Jdt.normalizeTypeBinding(returnBinding);
+        assertEquals(returnBinding, currentReturnBinding);
+
+      }
+
+    }
+
+  }
+
   @Test public void testNodeRecoveryFromBinding() throws Exception {
     final Source src = Source.from("Foo",
       String.join("\n",
@@ -88,6 +159,22 @@ public class UtilsTest {
     for(IBinding each : bindings){
       final ASTNode actualNode = Jdt.findASTNodeDeclaration(each, context.getCompilationUnit());
       assertNotNull(actualNode);
+    }
+  }
+
+
+  static class InvokesVisitor extends SkeletalVisitor {
+    final Set<MethodInvocation> invocationSet = new HashSet<>();
+
+    @Override public boolean visit(MethodInvocation invoke) {
+
+      invocationSet.add(invoke);
+
+      return super.visitNode(invoke);
+    }
+
+    Set<MethodInvocation> invocationSet(){
+      return invocationSet;
     }
   }
 }

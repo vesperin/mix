@@ -3,14 +3,7 @@ package com.vesperin.reflects;
 import com.vesperin.utils.Immutable;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -91,6 +84,12 @@ public class Classpath {
     return new Classpath(ClassCatcher.getClasspath(jarLocation));
   }
 
+  /**
+   * Performs a union of two classpaths.
+   *
+   * @param paths the classpaths to be merged.
+   * @return a new classpath
+   */
   public static Classpath concat(Classpath... paths){
     final Classpath result = new Classpath(new ArrayList<>());
 
@@ -253,43 +252,185 @@ public class Classpath {
       .collect(Collectors.toSet());
   }
 
-  public static Classpath getClasspath(){
-    return new Classpath(Installer.CLASSES);
+  /**
+   * Recalls a set of method definitions contained in a class definition.
+   *
+   * @param classDefinition input class definition
+   * @return a set of method definitions. This set can be an empty set.
+   */
+  public Set<MethodDefinition> methodSet(ClassDefinition classDefinition){
+    if (!getClassToMethodsIndex().containsKey(classDefinition)) return Immutable.set();
+    return getClassToMethodsIndex().get(classDefinition);
   }
 
-  public Map<ClassDefinition, Set<MethodDefinition>> getClassToMethodsIndex(){
+  /**
+   * @return all the method definitions in this classpath.
+   */
+  public Set<MethodDefinition> methodSet(){
+    final Set<MethodDefinition> methodDefinitions = new HashSet<>();
+
+    getClassToMethodsIndex()
+      .values()
+      .forEach(methodDefinitions::addAll);
+
+    return methodDefinitions;
+  }
+
+  private Map<ClassDefinition, Set<MethodDefinition>> getClassToMethodsIndex(){
     return classToMethodsIndex;
   }
 
-  public Map<ClassDefinition, Set<ClassDefinition>> getClassToSuperDefinitions(){
+  /**
+   * Recalls a set of super class definitions of a class definition.
+   *
+   * @param classDefinition input class definition
+   * @return set of super class definitions
+   */
+  public Set<ClassDefinition> superClassSet(ClassDefinition classDefinition){
+    if (!getClassToSuperDefinitions().containsKey(classDefinition)) return Immutable.set();
+    return getClassToSuperDefinitions().get(classDefinition);
+  }
+
+
+  private Map<ClassDefinition, Set<ClassDefinition>> getClassToSuperDefinitions(){
     return classToSuperDefinitions;
   }
 
-  public Map<ClassDefinition, Set<ClassDefinition>> getClassToSubDefinitions(){
+  /**
+   * Recalls a set of sub class definitions of a class definition.
+   *
+   * @param classDefinition input class definition
+   * @return set of sub class definitions
+   */
+  public Set<ClassDefinition> subClassSet(ClassDefinition classDefinition){
+    if (!getClassToSubDefinitions().containsKey(classDefinition)) return Immutable.set();
+    return getClassToSubDefinitions().get(classDefinition);
+  }
+
+  private Map<ClassDefinition, Set<ClassDefinition>> getClassToSubDefinitions(){
     return classToSubDefinitions;
   }
 
-  public Map<String, Set<ClassDefinition>> getClassNameToDefinitionIndex(){
+  /**
+   * Tests for class name membership.
+   *
+   * @param classname name to check
+   * @return true if the classname is tracked by this classpath; false otherwise.
+   */
+  public boolean containsClassname(String classname){
+    return getClassNameToDefinitionIndex().containsKey(classname);
+  }
+
+  /**
+   * Recalls a set of class definitions mapped to a class name
+   *
+   * @param className input class name
+   * @return set of class definitions
+   */
+  public Set<ClassDefinition> classDefinitionSet(String className){
+    if (!containsClassname(className)) return Immutable.set();
+    return getClassNameToDefinitionIndex().get(className);
+  }
+
+  /**
+   * @return all the class definitions in this classpath.
+   */
+  public Set<ClassDefinition> classDefinitionSet(){
+    final Set<ClassDefinition> classDefinitions = new HashSet<>();
+
+    getClassNameToDefinitionIndex()
+      .values()
+      .forEach(classDefinitions::addAll);
+
+    return classDefinitions;
+  }
+
+  private Map<String, Set<ClassDefinition>> getClassNameToDefinitionIndex(){
     return classNameToDefinitionIndex;
   }
 
-  public Map<String, PackageDefinition> getPackageNameIndex(){
+  /**
+   * Recalls the package definition of an import (in String form)
+   *
+   * @param importName input import
+   * @return a package definition matching the import (in String form)
+   */
+  public PackageDefinition importDefinition(String importName){
+    if (!getPackageNameIndex().containsKey(importName)) return PackageDefinition.emptyPackage();
+    return getPackageNameIndex().get(importName);
+  }
+
+  private Map<String, PackageDefinition> getPackageNameIndex(){
     return packageNameIndex;
   }
 
-  public Map<PackageDefinition, Set<ClassDefinition>> getPackageToClassesIndex(){
+
+  /**
+   * Recalls a set of class definitions contained in a package definition
+   *
+   * @param packageDefinition input package definition
+   * @return set of class definitions
+   */
+  public Set<ClassDefinition> classDefinitionSet(PackageDefinition packageDefinition){
+    if (!getPackageToClassesIndex().containsKey(packageDefinition)) return Immutable.set();
+    return getPackageToClassesIndex().get(packageDefinition);
+  }
+
+  private Map<PackageDefinition, Set<ClassDefinition>> getPackageToClassesIndex(){
     return packageToClassesIndex;
   }
 
-  public Map<ClassDefinition, Set<PackageDefinition>> getClassToPackagesIndex(){
+  /**
+   * Inverted index between a class definition and the possible namespaces.
+   *
+   * @param classDefinition input class definition
+   * @return set of class definitions
+   */
+  public Set<PackageDefinition> packageDefinitionSet(ClassDefinition classDefinition){
+    if (!getClassToPackagesIndex().containsKey(classDefinition)) return Immutable.set();
+    return getClassToPackagesIndex().get(classDefinition);
+  }
+
+  private Map<ClassDefinition, Set<PackageDefinition>> getClassToPackagesIndex(){
     return classToPackagesIndex;
   }
 
-  public Map<String, ClassDefinition> getCanonicalNameToDefinition(){
+
+  /**
+   * Recalls the class definition of a classname
+   *
+   * @param className input class name
+   * @return a class definition matching the classname (in String form); or
+   *    null if the definition is not found.
+   */
+  public ClassDefinition classDefinition(String className){
+    if (!containsCanonicalClassname(className)) return null;
+    return getCanonicalNameToDefinition().get(className);
+  }
+
+  /**
+   * @return all the canonical class definitions in this classpath.
+   */
+  public Set<ClassDefinition> canonicalClassDefinitionSet(){
+    return new HashSet<>(getCanonicalNameToDefinition()
+      .values());
+  }
+
+  /**
+   * Tests for class name membership.
+   *
+   * @param classname name to check
+   * @return true if the classname is tracked by this classpath; false otherwise.
+   */
+  public boolean containsCanonicalClassname(String classname){
+    return getCanonicalNameToDefinition().containsKey(classname);
+  }
+
+  private Map<String, ClassDefinition> getCanonicalNameToDefinition(){
     return canonicalNameToDefinition;
   }
 
-  public synchronized Classpath clearClasspath(){
+  public synchronized Classpath clear(){
     getClassNameToDefinitionIndex().clear();
     getClassToMethodsIndex().clear();
     getPackageNameIndex().clear();
@@ -299,17 +440,16 @@ public class Classpath {
     return this;
   }
 
-
+  /**
+   * @return the number of classes tracked by this classpath.
+   */
+  public int size(){
+    return getCanonicalNameToDefinition().size();
+  }
 
   // lazy loaded singleton
   static class Installer {
     static List<Class<?>> CLASSES = ClassCatcher.getClasspath();
-  }
-
-  public static void main(String[] args) {
-    Classpath a = Classpath.getClasspath();
-    Classpath b = new Classpath(new ArrayList<>(PRIMITIVES));
-    Classpath c = Classpath.concat(a, b);
   }
 
 }

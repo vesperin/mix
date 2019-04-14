@@ -32,7 +32,6 @@ public class ClassDefinition {
   private static final int NOT_USE_LAMBDA_EXPRESSION  = 1;
 
 
-  private static final Classpath CS;
   private static final Map<String, String> PRIMITIVE_TO_OBJECT;
 
   static {
@@ -56,8 +55,6 @@ public class ClassDefinition {
     lookUpTable.put("char[]", "java.lang.Character[]");
 
     PRIMITIVE_TO_OBJECT = Collections.unmodifiableMap(lookUpTable);
-
-    CS = Classpath.getClasspath();
   }
 
 
@@ -342,6 +339,13 @@ public class ClassDefinition {
     }
   }
 
+  public static ClassDefinition normalizedClassDefinition(CompilationUnit unit, ITypeBinding typeBinding){
+    final Optional<ITypeBinding> normalized = Optional
+      .ofNullable(Jdt.normalizeTypeBinding(Expect.nonNull(typeBinding)));
+
+    return classDefinition(unit, normalized.orElse(typeBinding));
+  }
+
   public static ClassDefinition classDefinition(CompilationUnit unit, ITypeBinding typeBinding){
     Expect.nonNull(typeBinding);
 
@@ -368,7 +372,7 @@ public class ClassDefinition {
   static ClassDefinition classDefinition(ITypeBinding typeBinding){
     Expect.nonNull(typeBinding);
 
-    final String typeName = typeBinding.getName();
+    final String typeName = typeBinding.isAnonymous() ? typeBinding.getDeclaringClass().getName() : typeBinding.getName();
     String pkgDef;
 
     if(typeBinding.toString().contains(MISSING)) {
@@ -681,16 +685,16 @@ public class ClassDefinition {
    * @param other the other definition to be checked
    * @return true if it is assignable from; false otherwise.
    */
-  public boolean isSuperDefinitionOf(ClassDefinition other){
+  public boolean isSuperDefinitionOf(ClassDefinition other, Classpath classpath){
 
     final ClassDefinition thisDefinition = this;
     final ClassDefinition thatDefinition = Expect.nonNull(other);
 
-    return isAssignableFrom(thisDefinition, thatDefinition);
+    return isAssignableFrom(thisDefinition, thatDefinition, classpath);
 
   }
 
-  private boolean isAssignableFrom(ClassDefinition thisDefinition, ClassDefinition thatDefinition) {
+  private boolean isAssignableFrom(ClassDefinition thisDefinition, ClassDefinition thatDefinition, Classpath classpath) {
     // same definition case
     final String thisReifiedName = thisDefinition.getReifiedCanonicalName();
     final String thatReifiedName = thatDefinition.getReifiedCanonicalName();
@@ -698,7 +702,7 @@ public class ClassDefinition {
       return true;
     }
 
-    final Set<ClassDefinition> children = childrenOf(thisDefinition);
+    final Set<ClassDefinition> children = childrenOf(thisDefinition, classpath);
     for(ClassDefinition child : children){
       if(thatReifiedName.equals(child.getReifiedCanonicalName())){
         return true;
@@ -717,19 +721,24 @@ public class ClassDefinition {
    * @param other the other definition to be checked
    * @return true if they are compatible; false otherwise.
    */
-  public boolean isSubDefinitionOf(ClassDefinition other){
+  public boolean isSubDefinitionOf(ClassDefinition other, Classpath classpath){
     final ClassDefinition thisDefinition = this;
     final ClassDefinition thatDefinition = Expect.nonNull(other);
 
-    return isAssignableFrom(thatDefinition, thisDefinition);
+    return isAssignableFrom(thatDefinition, thisDefinition, classpath);
   }
 
 
-  private static Set<ClassDefinition> childrenOf(ClassDefinition thisDefinition){
+  private static Set<ClassDefinition> childrenOf(ClassDefinition thisDefinition, Classpath classpath){
     if(thisDefinition == null) return Immutable.set();
-    if(!CS.getClassToSubDefinitions().containsKey(thisDefinition)) return Immutable.set();
+    if(classpath == null) return Immutable.set();
+    if(classpath.isEmpty()) return Immutable.set();
 
-    return CS.getClassToSubDefinitions().get(thisDefinition);
+    final Set<ClassDefinition> subClasses = classpath.subClassSet(thisDefinition);
+
+    if(subClasses.isEmpty()) return Immutable.set();
+
+    return subClasses;
   }
 
   public boolean isDeprecated() {
@@ -822,49 +831,6 @@ public class ClassDefinition {
       ", type=" + typeLiteral +
       (!annotations.isEmpty() ? (", annotatedWith=" + annotations) : "") +
       ')';
-  }
-
-  public static void main(String[] args) {
-    //Classpath.getClasspath();
-    System.out.println(System.getProperty("java.home") + "/lib");
-    System.out.println(System.getProperty("sun.boot.class.path"));
-//    System.out.println(Classpath.getClasspath().getClassNameToDefinitionIndex().containsKey("int"));
-//    System.out.println(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey("int"));
-//
-//    final ClassDefinition      a    = ClassDefinition.forceGeneric(int.class);
-//    final ClassDefinition      b    = ClassDefinition.forceGeneric(Integer.class);
-//
-//    System.out.println(b.isSubDefinitionOf(a));
-
-//
-//    final ClassDefinition      c    = ClassDefinition.forceGeneric(Collection.class);
-//    final ClassDefinition      d    = ClassDefinition.forceGeneric(int.class);
-//    final ClassDefinition      e    = ClassDefinition.forceGeneric(Integer.class);
-//
-//
-//    System.out.println("...");
-//
-//    System.out.println(a.isSuperDefinitionOf(b));
-//    System.out.println(b.isSubDefinitionOf(a));
-//
-//
-//    System.out.println((b.isSuperDefinitionOf(b) == b.isSubDefinitionOf(b)));
-//
-//    System.out.println(a.isSuperDefinitionOf(c));
-//    System.out.println(c.isSuperDefinitionOf(a));
-//
-//    System.out.println(d.isSuperDefinitionOf(e));
-//    System.out.println(e.isSubDefinitionOf(d));
-
-//    if(ClassDefinition.isPrimitive("int")){
-//      String intObj = ClassDefinition.objectifyPrimitiveType("int");
-//      if(Classpath.getClasspath().getCanonicalNameToDefinition().containsKey(intObj)){
-//        System.out.println(intObj);
-//      }
-//    }
-    final ClassDefinition      z    = ClassDefinition.forceGeneric(String[].class);
-    System.out.println(z);
-
   }
 
 }

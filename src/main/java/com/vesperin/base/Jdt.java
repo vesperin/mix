@@ -54,6 +54,39 @@ public class Jdt {
   }
 
 
+  /**
+   * Normalizes a type binding received from an expression to a type binding
+   * one can use in a declaration signature.
+   *
+   * @param binding the binding to be normalized
+   * @return the normalized binding
+   */
+  public static ITypeBinding normalizeTypeBinding(ITypeBinding binding) {
+    if (binding != null && !binding.isNullType() && !isVoidType(binding)) {
+      if (binding.isAnonymous()) {
+        final ITypeBinding[] baseBindings = binding.getInterfaces();
+        if (baseBindings.length > 0) {
+          return baseBindings[0];
+        }
+
+        return binding.getSuperclass();
+      }
+
+      if (binding.isCapture()) {
+        return binding.getWildcard();
+      }
+
+      return binding;
+    }
+
+    return null;
+  }
+
+  private static boolean isVoidType(ITypeBinding binding) {
+    return "void".equals(binding.getName());
+  }
+
+
   public static ASTNode findASTNodeDeclaration(IBinding binding, ASTNode node) {
     node = (node instanceof CompilationUnit) ? node.getRoot() : node;
     if (node != null) {
