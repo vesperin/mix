@@ -160,7 +160,7 @@ public class PackageDefinition {
     this.name = instance == null ? NOTHING : instance;
   }
 
-  private static PackageDefinition emptyPackage(){
+  static PackageDefinition emptyPackage(){
     return from(NOTHING);
   }
 

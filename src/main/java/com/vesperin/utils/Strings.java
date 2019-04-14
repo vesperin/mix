@@ -33,13 +33,18 @@ public class Strings {
 
     final int start = toChange.indexOf(open);
     if (start != -1) {
-      final int end = toChange.indexOf(close, start + open.length());
+      int end = toChange.indexOf(close, start + open.length());
+      int farEnd = toChange.lastIndexOf(close);
+      int delta = (farEnd - end);
+      if(delta >= 1){
+        end = farEnd;
+      }
       if (end != -1) {
         return toChange.substring(start, end + open.length());
       }
     }
 
-    return toChange.equals(text) ? BLANK_SPACE : toChange;
+    return BLANK_SPACE;
   }
 
   public static String fileNameWithoutExtension(File file){
