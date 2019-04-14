@@ -4,13 +4,7 @@ import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -61,10 +55,10 @@ public class AnnotationDefinition {
         final Object[] arrayObj = (Object[]) valObj;
         val = Arrays.toString(arrayObj);
 
-        memberValues.put(key, Arrays.asList(arrayObj).stream().map(Object::toString).collect(Collectors.toSet()));
+        memberValues.put(key, Arrays.stream(arrayObj).map(Object::toString).collect(Collectors.toSet()));
       } else {
         val = String.valueOf(valObj);
-        memberValues.put(key, new HashSet<>(Arrays.asList(val)));
+        memberValues.put(key, new HashSet<>(Collections.singletonList(val)));
       }
       final String entry = key + "=" + val;
       entries.add(entry);
