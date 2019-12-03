@@ -1,14 +1,13 @@
 package com.vesperin.base;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Re-Formats Java code according to Google's Code Style
@@ -34,10 +33,6 @@ public class SourceFormat {
     Map<String, String> options = new HashMap<>();
     options.put("org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags", "insert");
     options.put("org.eclipse.jdt.core.formatter.disabling_tag", "@formatter:off");
-    options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_annotation", "");
-
-    options.put("org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags","insert");
-    options.put("org.eclipse.jdt.core.formatter.disabling_tag","@formatter:off");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_annotation","insert");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_comma_in_type_parameters","do not insert");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_type_declaration","insert");
@@ -93,7 +88,6 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_binary_operator","insert");
     options.put("org.eclipse.jdt.core.formatter.blank_lines_before_package","0");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_cascading_method_invocation_with_arguments","16");
-    options.put("org.eclipse.jdt.core.compiler.source","1.7");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_constructor_declaration.count_dependent","16|4|48");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_enum_constant_arguments","insert");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_opening_paren_in_constructor_declaration","do not insert");
@@ -236,7 +230,6 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation.count_dependent","16|-1|16");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_and_in_type_parameter","insert");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_annotations_on_type","1585");
-    options.put("org.eclipse.jdt.core.compiler.compliance","1.7");
     options.put("org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer","2");
     options.put("org.eclipse.jdt.core.formatter.insert_space_between_empty_brackets_in_array_allocation_expression","do not insert");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_at_in_annotation_type_declaration","insert");
@@ -276,7 +269,6 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant.count_dependent","16|-1|16");
     options.put("org.eclipse.jdt.core.formatter.comment.line_length","100");
     options.put("org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_package","insert");
-    options.put("org.eclipse.jdt.core.formatter.blank_lines_between_import_groups","1");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_comma_in_enum_constant_arguments","do not insert");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_semicolon","do not insert");
     options.put("org.eclipse.jdt.core.formatter.brace_position_for_constructor_declaration","end_of_line");
@@ -319,7 +311,6 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_constructor_declaration_throws","insert");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration","16");
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_closing_brace_in_array_initializer","do not insert");
-    options.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform","1.7");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_resources_in_try","80");
     options.put("org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations","false");
     options.put("org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation","16");
@@ -359,7 +350,6 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration.count_dependent","16|5|80");
     options.put("org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries","true");
     options.put("org.eclipse.jdt.core.formatter.blank_lines_after_imports","1");
-    options.put("org.eclipse.jdt.core.formatter.blank_lines_between_import_groups","0");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_multiple_local_declarations","insert");
     options.put("org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_enum_constant_header","true");
     options.put("org.eclipse.jdt.core.formatter.insert_space_after_semicolon_in_for","insert");
@@ -369,6 +359,7 @@ public class SourceFormat {
     options.put("org.eclipse.jdt.core.formatter.insert_space_before_opening_angle_bracket_in_type_arguments","do not insert");
     options.put("org.eclipse.jdt.core.formatter.never_indent_block_comments_on_first_column","false");
     options.put("org.eclipse.jdt.core.formatter.keep_then_statement_on_same_line", "false");
+    options.put("org.eclipse.jdt.core.formatter.blank_lines_between_import_groups","1");
 
     // initialize the compiler settings to be able to format 1.8 code
     options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
