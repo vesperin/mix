@@ -8,9 +8,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author Huascar Sanchez
+ * Java Annotation
  */
-public class AnnotationDefinition {
+public class JavaAnnotation {
   private final String value;
 
   private final Map<String, Set<String>> memberValues;
@@ -20,7 +20,7 @@ public class AnnotationDefinition {
    *
    * @param value the {@link Annotation} object.
    */
-  public AnnotationDefinition(final Annotation value) {
+  public JavaAnnotation(final Annotation value) {
     this(value.toString());
   }
 
@@ -29,16 +29,16 @@ public class AnnotationDefinition {
    *
    * @param value the value of the {@link Annotation} object.
    */
-  public AnnotationDefinition(final String value) {
+  public JavaAnnotation(final String value) {
     this(value, new HashMap<>());
   }
 
-  private AnnotationDefinition(final String value, Map<String, Set<String>> memberValues) {
+  private JavaAnnotation(final String value, Map<String, Set<String>> memberValues) {
     this.value = value;
     this.memberValues = memberValues;
   }
 
-  static AnnotationDefinition annotationDefinition(IAnnotationBinding annotationBinding){
+  static JavaAnnotation annotationDefinition(IAnnotationBinding annotationBinding){
     final StringBuilder annotation = new StringBuilder(annotationBinding.getAnnotationType().getQualifiedName());
     annotation.append("(");
 
@@ -69,7 +69,7 @@ public class AnnotationDefinition {
 
     annotation.append(")");
 
-    return new AnnotationDefinition(annotation.toString(), memberValues);
+    return new JavaAnnotation(annotation.toString(), memberValues);
   }
 
   @Override public String toString() {

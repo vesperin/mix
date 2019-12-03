@@ -4,7 +4,6 @@ import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
 import com.vesperin.base.requests.BindingRequestBySignature;
 import com.vesperin.base.requests.BindingRequestByValue;
-import com.vesperin.base.spi.BindingRequest;
 import com.vesperin.utils.Immutable;
 import com.vesperin.utils.Sets;
 import com.vesperin.base.visitors.DeclarationsAfterVisitor;
@@ -83,10 +82,10 @@ public class ScopeAnalyser {
    */
   public static List<IBinding> getAllDeclarations(ASTNode node, int flags, boolean focusOnFields) {
 
-    ASTNode declaration = Jdt.findParentStatement(node);
+    ASTNode declaration = CommonJdt.findParentStatement(node);
 
     if (declaration == null && !focusOnFields) {
-      declaration = Jdt.getChildren(node).stream()
+      declaration = CommonJdt.getChildren(node).stream()
         .filter(s -> s instanceof Block)
         .findFirst().orElse(null);
     }
@@ -134,9 +133,7 @@ public class ScopeAnalyser {
       if (!collectMethodBindings(binding, flags, request)) {
         if (!collectTypeBindings(binding, flags, request)) {
           if (!collectInheritedBindings(binding, flags, request)) {
-            if (!collectInterfaceBindings(binding, flags, request)) {
-              return false;
-            }
+            return collectInterfaceBindings(binding, flags, request);
           }
         }
       }
@@ -160,15 +157,11 @@ public class ScopeAnalyser {
   private boolean collectInheritedBindings(ITypeBinding binding, int flags, BindingRequest request) {
     final ITypeBinding superClass = binding.getSuperclass();
     if (superClass != null) {
-      if (collectsInheritedElements(superClass, flags, request)) {
-        return true;
-      }
+      return collectsInheritedElements(superClass, flags, request);
     } else if (binding.isArray()) {
       final AST rootAST = root.getAST();
       final ITypeBinding wellKnownType = rootAST.resolveWellKnownType("java.lang.Object");
-      if (collectsInheritedElements(wellKnownType, flags, request)) {
-        return true;
-      }
+      return collectsInheritedElements(wellKnownType, flags, request);
     }
 
     return false;
@@ -240,12 +233,11 @@ public class ScopeAnalyser {
     } else {
       final ITypeBinding declaringClass = binding.getDeclaringClass();
       if (declaringClass != null) {
-        if (collectTypeDeclarations(declaringClass, flags, request)) { // Recursively add inherited
-          return true;
-        }
+        // Recursively add inherited
+        return collectTypeDeclarations(declaringClass, flags, request);
       } else if (Scope.isTypesFlagAvailable(flags)) {
         if (root.findDeclaringNode(binding) != null) {
-          List<TypeDeclaration> types = Jdt.typeSafeList(TypeDeclaration.class, root.types());
+          List<TypeDeclaration> types = CommonJdt.typeSafeList(TypeDeclaration.class, root.types());
           for (TypeDeclaration type : types) {
             if (request.accept(type.resolveBinding())) {
               return true;
@@ -274,9 +266,7 @@ public class ScopeAnalyser {
 
       final ITypeBinding parentTypeBinding = getBindingOfParentType(node.getParent());
       if (parentTypeBinding != null) {
-        if (collectTypeDeclarations(parentTypeBinding, flags, bindingRequest)) {
-          return true;
-        }
+        return collectTypeDeclarations(parentTypeBinding, flags, bindingRequest);
       }
 
     }
@@ -482,7 +472,7 @@ public class ScopeAnalyser {
 
         final List<IBinding> result = request.getRequestedBindings();
 
-        return result.toArray(new IBinding[result.size()]);
+        return result.toArray(new IBinding[0]);
       }
       return null;
     } finally {
@@ -517,7 +507,7 @@ public class ScopeAnalyser {
       bindingsInMethod.addAll(getFieldDeclarations(node, flags));
       bindingsInMethod.addAll(getTypeDeclarations(node, flags));
 
-      return bindingsInMethod.toArray(new IBinding[bindingsInMethod.size()]);
+      return bindingsInMethod.toArray(new IBinding[0]);
 
     } else if (node instanceof CompilationUnit){
       return getDeclarationsInCompilationUnit(location, flags, node);
@@ -565,7 +555,7 @@ public class ScopeAnalyser {
       }
 
       final List<IBinding> result = request.getRequestedBindings();
-      return result.toArray(new IBinding[result.size()]);
+      return result.toArray(new IBinding[0]);
     } finally {
       clearVisitedBindings();
     }
@@ -581,7 +571,7 @@ public class ScopeAnalyser {
       }
     }
 
-    return result.toArray(new IVariableBinding[result.size()]);
+    return result.toArray(new IVariableBinding[0]);
   }
 
 
@@ -685,12 +675,12 @@ public class ScopeAnalyser {
       result.add(eachBindingAfter.getName());
     }
 
-    final List<ImportDeclaration> imports = Jdt.typeSafeList(ImportDeclaration.class, root.imports());
+    final List<ImportDeclaration> imports = CommonJdt.typeSafeList(ImportDeclaration.class, root.imports());
 
     final List<String> filtered = imports.stream()
       .filter(eachImportDeclaration -> eachImportDeclaration.isStatic()
         && !eachImportDeclaration.isOnDemand())
-      .map(eachImportDeclaration -> Jdt.getSimpleNameIdentifier(eachImportDeclaration.getName()))
+      .map(eachImportDeclaration -> CommonJdt.getSimpleNameIdentifier(eachImportDeclaration.getName()))
       .collect(Collectors.toList());
 
     result.addAll(filtered);
@@ -717,7 +707,7 @@ public class ScopeAnalyser {
       }
 
       final List<IBinding> bindings = getFieldDeclarations(node, flags);
-      return bindings.toArray(new IBinding[bindings.size()]);
+      return bindings.toArray(new IBinding[0]);
     } finally {
       clearVisitedBindings();
     }

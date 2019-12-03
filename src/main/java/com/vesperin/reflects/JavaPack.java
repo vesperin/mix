@@ -1,7 +1,7 @@
 package com.vesperin.reflects;
 
+import com.vesperin.utils.Immutable;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /**
  * @author Huascar Sanchez
  */
-public class PackageDefinition {
+public class JavaPack {
 
   private static final Set<String> JAVA_LANG;
 
@@ -128,12 +128,8 @@ public class PackageDefinition {
     lookUpSet.add("SafeVarargs");
     lookUpSet.add("SuppressWarnings");
 
-    JAVA_LANG = Collections.unmodifiableSet(lookUpSet);
+    JAVA_LANG = Immutable.setOf(lookUpSet);
   }
-
-
-
-
 
   private static final String NOTHING       = "";
   private static final Pattern PACKAGE_NAME = Pattern.compile(
@@ -147,7 +143,7 @@ public class PackageDefinition {
    *
    * @param instance a package instance
    */
-  private PackageDefinition(Package instance) {
+  private JavaPack(Package instance) {
     this.name = instance == null ? NOTHING : instance.getName();
   }
 
@@ -156,11 +152,11 @@ public class PackageDefinition {
    *
    * @param instance name of package.
    */
-  private PackageDefinition(String instance) {
+  private JavaPack(String instance) {
     this.name = instance == null ? NOTHING : instance;
   }
 
-  static PackageDefinition emptyPackage(){
+  static JavaPack emptyPackage(){
     return from(NOTHING);
   }
 
@@ -173,7 +169,7 @@ public class PackageDefinition {
       return false;
     }
 
-    final PackageDefinition typeDef = (PackageDefinition) o;
+    final JavaPack typeDef = (JavaPack) o;
     return getName().equals(typeDef.getName());
   }
 
@@ -189,9 +185,9 @@ public class PackageDefinition {
       && JAVA_LANG.contains(typename);
   }
 
-  private static PackageDefinition from(Class<?> cls){
+  private static JavaPack from(Class<?> cls){
     final Package pkg = cls.getPackage();
-    if(pkg != null) return new PackageDefinition(pkg);
+    if(pkg != null) return new JavaPack(pkg);
 
     if(cls.isArray()){
       final String targetText = cls.toString();
@@ -199,20 +195,20 @@ public class PackageDefinition {
 
       if(idx != -1){
         final String open  = "class [L";
-        final String close = targetText.substring(idx, targetText.length());
+        final String close = targetText.substring(idx);
         final String pkgString = targetText.replace(open, "").replace(close, "");
-        return new PackageDefinition(pkgString);
+        return new JavaPack(pkgString);
       }
     }
 
-    return new PackageDefinition(NOTHING);
+    return new JavaPack(NOTHING);
   }
 
-  public static PackageDefinition from(String pkgString){
-    return new PackageDefinition(pkgString);
+  public static JavaPack from(String pkgString){
+    return new JavaPack(pkgString);
   }
 
-  public static PackageDefinition from(Type type) {
+  public static JavaPack from(Type type) {
     if (type instanceof Class) {
       return from((Class<?>) type);
     }

@@ -1,13 +1,22 @@
 package com.vesperin.reflects;
 
 import com.vesperin.utils.Immutable;
-
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
- * @author Huascar Sanchez
+ * Classpath holds classes needed for type resolution.
  */
 public class Classpath {
 
@@ -24,21 +33,21 @@ public class Classpath {
   }
 
 
-  private final Map<String, ClassDefinition>                  canonicalNameToDefinition;
-  private final Map<String, Set<ClassDefinition>>             classNameToDefinitionIndex;
-  private final Map<ClassDefinition, Set<MethodDefinition>>   classToMethodsIndex;
-  private final Map<String, PackageDefinition>                packageNameIndex;
-  private final Map<PackageDefinition, Set<ClassDefinition>>  packageToClassesIndex;
-  private final Map<ClassDefinition, Set<PackageDefinition>>  classToPackagesIndex;
-  private final Map<ClassDefinition, Set<ClassDefinition>>    classToSuperDefinitions;
-  private final Map<ClassDefinition, Set<ClassDefinition>>    classToSubDefinitions;
+  private final Map<String, JavaClass> canonicalNameToDefinition;
+  private final Map<String, Set<JavaClass>> classNameToDefinitionIndex;
+  private final Map<JavaClass, Set<JavaMethod>> classToMethodsIndex;
+  private final Map<String, JavaPack> packageNameIndex;
+  private final Map<JavaPack, Set<JavaClass>> packageToClassesIndex;
+  private final Map<JavaClass, Set<JavaPack>> classToPackagesIndex;
+  private final Map<JavaClass, Set<JavaClass>> classToSuperDefinitions;
+  private final Map<JavaClass, Set<JavaClass>> classToSubDefinitions;
 
   /**
    * Creates a new Classpath object given a list of Java classes.
    *
    * @param classes Java classes
    */
-  private Classpath(List<Class<?>> classes){
+  private Classpath(Collection<Class<?>> classes){
     this.classNameToDefinitionIndex = new HashMap<>();
     this.canonicalNameToDefinition  = new HashMap<>();
     this.classToMethodsIndex        = new HashMap<>();
@@ -70,7 +79,7 @@ public class Classpath {
    *    as well as other classes that are in one's local classpath.
    */
   public static Classpath newClasspath(){
-    return new Classpath(Installer.CLASSES);
+    return new Classpath(new ArrayList<>());
   }
 
   /**
@@ -81,91 +90,121 @@ public class Classpath {
    * @return a new class path.
    */
   public static Classpath newClasspath(Path jarLocation){
-    return new Classpath(ClassCatcher.getClasspath(jarLocation));
+    Classpath classpath;
+    try {
+      classpath = new Classpath(JavaClasses.publicClasses(jarLocation));
+    } catch (IOException ignored){
+      classpath = emptyClasspath();
+    }
+
+    return classpath;
   }
 
   /**
-   * Performs a union of two classpaths.
+   * Concatenates one or more classpaths.
    *
-   * @param paths the classpaths to be merged.
+   * @param first classpath to be merged.
+   * @param rest other classpaths to be merged.
    * @return a new classpath
    */
-  public static Classpath concat(Classpath... paths){
+  public static Classpath concat(Classpath first, Classpath... rest){
     final Classpath result = new Classpath(new ArrayList<>());
 
-    for(Classpath each : paths){
-      if(Objects.isNull(each)) continue;
+    final Stream<Classpath> classpaths = Stream.concat(
+        Stream.of(first), Arrays.stream(rest)).filter(Objects::nonNull);
 
-      for(ClassDefinition eachDefinition : each.classToSuperDefinitions.keySet()){
-        if(!result.classToSuperDefinitions.containsKey(eachDefinition)){
-          result.classToSuperDefinitions.put(
-            eachDefinition, each.classToSuperDefinitions.get(eachDefinition));
-        }
-      }
-
-      for(ClassDefinition eachDefinition : each.classToSubDefinitions.keySet()){
-        if(!result.classToSubDefinitions.containsKey(eachDefinition)){
-          result.classToSubDefinitions.put(
-            eachDefinition, each.classToSubDefinitions.get(eachDefinition));
-        }
-      }
-
-      for(String canonicalName : each.canonicalNameToDefinition.keySet()){
-        if(!result.canonicalNameToDefinition.containsKey(canonicalName)){
-          result.canonicalNameToDefinition.put(
-            canonicalName, each.canonicalNameToDefinition.get(canonicalName)
-          );
-        }
-      }
-
-
-      for(String typeName : each.classNameToDefinitionIndex.keySet()){
-        final Set<ClassDefinition> touchedClasses = each.classNameToDefinitionIndex.get(typeName);
-        if(result.classNameToDefinitionIndex.containsKey(typeName)){
-          result.classNameToDefinitionIndex.get(typeName).addAll(touchedClasses);
-        } else {
-          result.classNameToDefinitionIndex.put(typeName, new HashSet<>(touchedClasses));
-        }
-      }
-
-      for(ClassDefinition classDef : each.classToMethodsIndex.keySet()){
-        final Set<MethodDefinition> touchedMethods = each.classToMethodsIndex.get(classDef);
-        if(result.classToMethodsIndex.containsKey(classDef)){
-          result.classToMethodsIndex.get(classDef).addAll(touchedMethods);
-        } else {
-          result.classToMethodsIndex.put(classDef, new HashSet<>(touchedMethods));
-        }
-      }
-
-
-      for(String pkgDef : each.packageNameIndex.keySet()){
-        if(!result.packageNameIndex.containsKey(pkgDef)){
-          result.packageNameIndex.put(pkgDef, each.packageNameIndex.get(pkgDef));
-        }
-      }
-
-      for(PackageDefinition pkgDef : each.packageToClassesIndex.keySet()){
-        final Set<ClassDefinition> touchedImports = each.packageToClassesIndex.get(pkgDef);
-        if(result.packageToClassesIndex.containsKey(pkgDef)){
-          result.packageToClassesIndex.get(pkgDef).addAll(touchedImports);
-        } else {
-          result.packageToClassesIndex.put(pkgDef, new HashSet<>(touchedImports));
-        }
-      }
-
-      for(ClassDefinition clsDef : each.classToPackagesIndex.keySet()){
-        final Set<PackageDefinition> touchedClasses = each.classToPackagesIndex.get(clsDef);
-        if(result.classToPackagesIndex.containsKey(clsDef)){
-          result.classToPackagesIndex.get(clsDef).addAll(touchedClasses);
-        } else {
-          result.classToPackagesIndex.put(clsDef, new HashSet<>(touchedClasses));
-        }
-      }
-
-    }
-
+    classpaths.forEach(cp -> {
+      indexClassToSuperDefs(result, cp);
+      indexClassToSubDefs(result, cp);
+      indexQualNameToClassDef(result, cp);
+      indexNameToClassDef(result, cp);
+      indexClassToMethodDefs(result, cp);
+      indexNameToPackDef(result, cp);
+      indexPackToClassDefs(result, cp);
+      indexClassToPackDefs(result, cp);
+    });
 
     return result;
+  }
+
+  private static void indexClassToPackDefs(Classpath result, Classpath cp) {
+    for(JavaClass clsDef : cp.classToPackagesIndex.keySet()){
+      final Set<JavaPack> touchedClasses = cp.classToPackagesIndex.get(clsDef);
+      if(result.classToPackagesIndex.containsKey(clsDef)){
+        result.classToPackagesIndex.get(clsDef).addAll(touchedClasses);
+      } else {
+        result.classToPackagesIndex.put(clsDef, new HashSet<>(touchedClasses));
+      }
+    }
+  }
+
+  private static void indexPackToClassDefs(Classpath result, Classpath cp) {
+    for(JavaPack pkgDef : cp.packageToClassesIndex.keySet()){
+      final Set<JavaClass> touchedImports = cp.packageToClassesIndex.get(pkgDef);
+      if(result.packageToClassesIndex.containsKey(pkgDef)){
+        result.packageToClassesIndex.get(pkgDef).addAll(touchedImports);
+      } else {
+        result.packageToClassesIndex.put(pkgDef, new HashSet<>(touchedImports));
+      }
+    }
+  }
+
+  private static void indexNameToPackDef(Classpath result, Classpath cp) {
+    for(String pkgDef : cp.packageNameIndex.keySet()){
+      if(!result.packageNameIndex.containsKey(pkgDef)){
+        result.packageNameIndex.put(pkgDef, cp.packageNameIndex.get(pkgDef));
+      }
+    }
+  }
+
+  private static void indexClassToMethodDefs(Classpath result, Classpath cp) {
+    for(JavaClass javaClass : cp.classToMethodsIndex.keySet()){
+      final Set<JavaMethod> touchedMethods = cp.classToMethodsIndex.get(javaClass);
+      if(result.classToMethodsIndex.containsKey(javaClass)){
+        result.classToMethodsIndex.get(javaClass).addAll(touchedMethods);
+      } else {
+        result.classToMethodsIndex.put(javaClass, new HashSet<>(touchedMethods));
+      }
+    }
+  }
+
+  private static void indexNameToClassDef(Classpath result, Classpath cp) {
+    for(String typeName : cp.classNameToDefinitionIndex.keySet()){
+      final Set<JavaClass> touchedClasses = cp.classNameToDefinitionIndex.get(typeName);
+      if(result.classNameToDefinitionIndex.containsKey(typeName)){
+        result.classNameToDefinitionIndex.get(typeName).addAll(touchedClasses);
+      } else {
+        result.classNameToDefinitionIndex.put(typeName, new HashSet<>(touchedClasses));
+      }
+    }
+  }
+
+  private static void indexQualNameToClassDef(Classpath result, Classpath cp) {
+    for (String canonicalName : cp.canonicalNameToDefinition.keySet()) {
+      if (!result.canonicalNameToDefinition.containsKey(canonicalName)) {
+        result.canonicalNameToDefinition.put(
+            canonicalName, cp.canonicalNameToDefinition.get(canonicalName)
+        );
+      }
+    }
+  }
+
+  private static void indexClassToSubDefs(Classpath current, Classpath cp) {
+    for(JavaClass eachDefinition : cp.classToSubDefinitions.keySet()){
+      if(!current.classToSubDefinitions.containsKey(eachDefinition)){
+        current.classToSubDefinitions.put(
+            eachDefinition, cp.classToSubDefinitions.get(eachDefinition));
+      }
+    }
+  }
+
+  private static void indexClassToSuperDefs(Classpath current, Classpath cp) {
+    for(JavaClass eachDefinition : cp.classToSuperDefinitions.keySet()){
+      if(!current.classToSuperDefinitions.containsKey(eachDefinition)){
+        current.classToSuperDefinitions.put(
+            eachDefinition, cp.classToSuperDefinitions.get(eachDefinition));
+      }
+    }
   }
 
   /**
@@ -175,15 +214,15 @@ public class Classpath {
     return getClassNameToDefinitionIndex().isEmpty();
   }
 
-  private void buildIndices(List<Class<?>> classes){
+  private void buildIndices(Collection<Class<?>> classes){
 
     for(Class<?> eachClass : classes){
-      final ClassDefinition definition = ClassDefinition.forceGeneric(eachClass);
+      final JavaClass definition = JavaClass.forceGeneric(eachClass);
 
       canonicalNameToDefinition.put(definition.getCanonicalName(), definition);
 
       if(!classNameToDefinitionIndex.containsKey(definition.getClassName())){
-        final Set<ClassDefinition> setOfDefinitions = new HashSet<>();
+        final Set<JavaClass> setOfDefinitions = new HashSet<>();
         setOfDefinitions.add(definition);
 
         this.classNameToDefinitionIndex.put(
@@ -191,23 +230,23 @@ public class Classpath {
           setOfDefinitions
         );
 
-        classToMethodsIndex.put(definition, methodDefinitions(eachClass));
+        classToMethodsIndex.put(definition, JavaMethod.declaredMethodDefinitions(eachClass));
       } else {
         this.classNameToDefinitionIndex
           .get(definition.getClassName())
           .add(definition);
 
         if(!classToMethodsIndex.containsKey(definition)){
-          classToMethodsIndex.put(definition, methodDefinitions(eachClass));
+          classToMethodsIndex.put(definition, JavaMethod.declaredMethodDefinitions(eachClass));
         }
       }
 
-      final PackageDefinition pkgDef = definition.getPackageDefinition();
+      final JavaPack pkgDef = definition.getJavaPack();
 
       if(!packageNameIndex.containsKey(pkgDef.getName())){
         packageNameIndex.put(pkgDef.getName(), pkgDef);
 
-        final Set<ClassDefinition> first = new HashSet<>();
+        final Set<JavaClass> first = new HashSet<>();
         first.add(definition);
 
         packageToClassesIndex.put(pkgDef, first);
@@ -218,7 +257,7 @@ public class Classpath {
 
       if(!classToPackagesIndex.containsKey(definition)){
 
-        final Set<PackageDefinition> pkgDefs = new HashSet<>();
+        final Set<JavaPack> pkgDefs = new HashSet<>();
         pkgDefs.add(pkgDef);
 
         classToPackagesIndex.put(definition, pkgDefs);
@@ -227,12 +266,12 @@ public class Classpath {
       }
 
       if(!classToSuperDefinitions.containsKey(definition)){
-        final Set<ClassDefinition> supers = ClassDefinition.getSuperClassDefinitions(eachClass);
+        final Set<JavaClass> supers = JavaClass.getSuperClassDefinitions(eachClass);
 
         classToSuperDefinitions.put(definition, new HashSet<>(supers));
 
 
-        for(ClassDefinition eachSuper : supers){
+        for(JavaClass eachSuper : supers){
           if(classToSubDefinitions.containsKey(eachSuper)){
             classToSubDefinitions.get(eachSuper).add(definition);
           } else {
@@ -246,68 +285,62 @@ public class Classpath {
     }
   }
 
-  private static Set<MethodDefinition> methodDefinitions(Class<?> eachClass){
-    return MethodDefinition.allMethods(eachClass)
-      .filter(MethodDefinition.isRelevantMethodDefinition())
-      .collect(Collectors.toSet());
-  }
-
   /**
    * Recalls a set of method definitions contained in a class definition.
    *
-   * @param classDefinition input class definition
+   * @param javaClass input class definition
    * @return a set of method definitions. This set can be an empty set.
    */
-  public Set<MethodDefinition> methodSet(ClassDefinition classDefinition){
-    if (!getClassToMethodsIndex().containsKey(classDefinition)) return Immutable.set();
-    return getClassToMethodsIndex().get(classDefinition);
+  public Set<JavaMethod> methodSet(JavaClass javaClass){
+    if (!getClassToMethodsIndex().containsKey(javaClass)) return Immutable.set();
+    return getClassToMethodsIndex().get(javaClass);
   }
 
   /**
    * @return all the method definitions in this classpath.
    */
-  public Set<MethodDefinition> methodSet(){
-    final Set<MethodDefinition> methodDefinitions = new HashSet<>();
+  public Set<JavaMethod> methodSet(){
+    final Set<JavaMethod> javaMethods = new HashSet<>();
 
     getClassToMethodsIndex()
       .values()
-      .forEach(methodDefinitions::addAll);
+      .forEach(javaMethods::addAll);
 
-    return methodDefinitions;
+    return javaMethods;
   }
 
-  private Map<ClassDefinition, Set<MethodDefinition>> getClassToMethodsIndex(){
+  private Map<JavaClass, Set<JavaMethod>> getClassToMethodsIndex(){
     return classToMethodsIndex;
   }
 
   /**
    * Recalls a set of super class definitions of a class definition.
    *
-   * @param classDefinition input class definition
+   * @param javaClass input class definition
    * @return set of super class definitions
    */
-  public Set<ClassDefinition> superClassSet(ClassDefinition classDefinition){
-    if (!getClassToSuperDefinitions().containsKey(classDefinition)) return Immutable.set();
-    return getClassToSuperDefinitions().get(classDefinition);
+  public Set<JavaClass> superClassSet(JavaClass javaClass){
+    if (!getClassToSuperDefinitions().containsKey(javaClass)) return Immutable.set();
+    return getClassToSuperDefinitions().get(javaClass);
   }
 
 
-  private Map<ClassDefinition, Set<ClassDefinition>> getClassToSuperDefinitions(){
+  private Map<JavaClass, Set<JavaClass>> getClassToSuperDefinitions(){
     return classToSuperDefinitions;
   }
 
   /**
    * Recalls a set of sub class definitions of a class definition.
    *
-   * @param classDefinition input class definition
+   * @param javaClass input class definition
    * @return set of sub class definitions
    */
-  public Set<ClassDefinition> subClassSet(ClassDefinition classDefinition){
-    if (!getClassToSubDefinitions().containsKey(classDefinition)) return Immutable.set();
-    return getClassToSubDefinitions().get(classDefinition);
+  public Set<JavaClass> subClassSet(JavaClass javaClass){
+    if (!getClassToSubDefinitions().containsKey(javaClass)) return Immutable.set();
+    return getClassToSubDefinitions().get(javaClass);
   }
 
-  private Map<ClassDefinition, Set<ClassDefinition>> getClassToSubDefinitions(){
+  private Map<JavaClass, Set<JavaClass>> getClassToSubDefinitions(){
     return classToSubDefinitions;
   }
 
@@ -317,7 +350,7 @@ public class Classpath {
    * @param classname name to check
    * @return true if the classname is tracked by this classpath; false otherwise.
    */
-  public boolean containsClassname(String classname){
+  public boolean containsJavaClass(String classname){
     return getClassNameToDefinitionIndex().containsKey(classname);
   }
 
@@ -327,25 +360,25 @@ public class Classpath {
    * @param className input class name
    * @return set of class definitions
    */
-  public Set<ClassDefinition> classDefinitionSet(String className){
-    if (!containsClassname(className)) return Immutable.set();
+  public Set<JavaClass> classDefinitionSet(String className){
+    if (!containsJavaClass(className)) return Immutable.set();
     return getClassNameToDefinitionIndex().get(className);
   }
 
   /**
    * @return all the class definitions in this classpath.
    */
-  public Set<ClassDefinition> classDefinitionSet(){
-    final Set<ClassDefinition> classDefinitions = new HashSet<>();
+  public Set<JavaClass> classDefinitionSet(){
+    final Set<JavaClass> javaClasses = new HashSet<>();
 
     getClassNameToDefinitionIndex()
       .values()
-      .forEach(classDefinitions::addAll);
+      .forEach(javaClasses::addAll);
 
-    return classDefinitions;
+    return javaClasses;
   }
 
-  private Map<String, Set<ClassDefinition>> getClassNameToDefinitionIndex(){
+  private Map<String, Set<JavaClass>> getClassNameToDefinitionIndex(){
     return classNameToDefinitionIndex;
   }
 
@@ -355,12 +388,12 @@ public class Classpath {
    * @param importName input import
    * @return a package definition matching the import (in String form)
    */
-  public PackageDefinition importDefinition(String importName){
-    if (!getPackageNameIndex().containsKey(importName)) return PackageDefinition.emptyPackage();
+  public JavaPack importDefinition(String importName){
+    if (!getPackageNameIndex().containsKey(importName)) return JavaPack.emptyPackage();
     return getPackageNameIndex().get(importName);
   }
 
-  private Map<String, PackageDefinition> getPackageNameIndex(){
+  private Map<String, JavaPack> getPackageNameIndex(){
     return packageNameIndex;
   }
 
@@ -368,30 +401,30 @@ public class Classpath {
   /**
    * Recalls a set of class definitions contained in a package definition
    *
-   * @param packageDefinition input package definition
+   * @param javaPack input package definition
    * @return set of class definitions
    */
-  public Set<ClassDefinition> classDefinitionSet(PackageDefinition packageDefinition){
-    if (!getPackageToClassesIndex().containsKey(packageDefinition)) return Immutable.set();
-    return getPackageToClassesIndex().get(packageDefinition);
+  public Set<JavaClass> classDefinitionSet(JavaPack javaPack){
+    if (!getPackageToClassesIndex().containsKey(javaPack)) return Immutable.set();
+    return getPackageToClassesIndex().get(javaPack);
   }
 
-  private Map<PackageDefinition, Set<ClassDefinition>> getPackageToClassesIndex(){
+  private Map<JavaPack, Set<JavaClass>> getPackageToClassesIndex(){
     return packageToClassesIndex;
   }
 
   /**
    * Inverted index between a class definition and the possible namespaces.
    *
-   * @param classDefinition input class definition
+   * @param javaClass input class definition
    * @return set of class definitions
    */
-  public Set<PackageDefinition> packageDefinitionSet(ClassDefinition classDefinition){
-    if (!getClassToPackagesIndex().containsKey(classDefinition)) return Immutable.set();
-    return getClassToPackagesIndex().get(classDefinition);
+  public Set<JavaPack> packageDefinitionSet(JavaClass javaClass){
+    if (!getClassToPackagesIndex().containsKey(javaClass)) return Immutable.set();
+    return getClassToPackagesIndex().get(javaClass);
   }
 
-  private Map<ClassDefinition, Set<PackageDefinition>> getClassToPackagesIndex(){
+  private Map<JavaClass, Set<JavaPack>> getClassToPackagesIndex(){
     return classToPackagesIndex;
   }
 
@@ -403,7 +436,7 @@ public class Classpath {
    * @return a class definition matching the classname (in String form); or
    *    null if the definition is not found.
    */
-  public ClassDefinition classDefinition(String className){
+  public JavaClass classDefinition(String className){
     if (!containsCanonicalClassname(className)) return null;
     return getCanonicalNameToDefinition().get(className);
   }
@@ -411,9 +444,8 @@ public class Classpath {
   /**
    * @return all the canonical class definitions in this classpath.
    */
-  public Set<ClassDefinition> canonicalClassDefinitionSet(){
-    return new HashSet<>(getCanonicalNameToDefinition()
-      .values());
+  public Set<JavaClass> canonicalClassDefinitionSet(){
+    return Immutable.setOf(getCanonicalNameToDefinition().values());
   }
 
   /**
@@ -426,7 +458,7 @@ public class Classpath {
     return getCanonicalNameToDefinition().containsKey(classname);
   }
 
-  private Map<String, ClassDefinition> getCanonicalNameToDefinition(){
+  private Map<String, JavaClass> getCanonicalNameToDefinition(){
     return canonicalNameToDefinition;
   }
 
@@ -447,9 +479,7 @@ public class Classpath {
     return getCanonicalNameToDefinition().size();
   }
 
-  // lazy loaded singleton
-  static class Installer {
-    static List<Class<?>> CLASSES = ClassCatcher.getClasspath();
+  @Override public String toString() {
+    return "Classpath(" + size() + " classes)";
   }
-
 }

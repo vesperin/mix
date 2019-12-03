@@ -36,7 +36,7 @@ public final class StopWatch {
    * @param label user-provided label
    * @return reported elapsed time
    */
-  public String resetAndLog(String label){
+  public String resetAndReturn(String label){
     return (label + ": " + elapsedTime() + "s");
   }
 

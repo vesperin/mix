@@ -1,14 +1,13 @@
 package com.vesperin.tasks;
 
-import com.vesperin.utils.Log;
-
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 /**
- * @author Huascar Sanchez
+ * Task define work unit to be run in paralell.
  */
 public abstract class Task {
   private final String name;
@@ -37,7 +36,7 @@ public abstract class Task {
    * @return self
    */
   public Task after(Task prerequisite){
-    firstToFinish.add(Objects.requireNonNull(prerequisite));
+    Optional.ofNullable(prerequisite).ifPresent(firstToFinish::add);
     return this;
   }
 
@@ -59,7 +58,7 @@ public abstract class Task {
    * @return self
    */
   public Task afterSuccess(Task prerequisite){
-    firstToSuccessfullyFinish.add(Objects.requireNonNull(prerequisite));
+    Optional.ofNullable(prerequisite).ifPresent(firstToSuccessfullyFinish::add);
     return this;
   }
 
@@ -107,25 +106,31 @@ public abstract class Task {
   }
 
   /**
-   * Runs this task.
-   *
-   * @param log output log.
+   * Runs this task
    */
-  public final void run(Log log){
-    if(!Objects.isNull(result)) throw new IllegalStateException();
+  public final void run(){
+    run(new PrintWriter(System.out), new PrintWriter(System.err));
+  }
+
+  /**
+   * Runs this task.
+   */
+  public final void run(PrintWriter stdout, PrintWriter stderr){
+    if(result != null) throw new IllegalStateException();
 
     try {
-      log.info("Running " + this);
+      stdout.println("Running " + this);
       result  = execute();
     } catch (Exception e){
-      log.info(name + " failed");
+      stdout.println(name + " failed");
+      e.printStackTrace(stderr);
 
       thrown  = e;
       result  = TaskResult.ERROR;
     }
 
     if(TaskResult.SUCCESS != result){
-      log.warn(this + " " + result);
+      stdout.println(this + " " + result);
     }
   }
 

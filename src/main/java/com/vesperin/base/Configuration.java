@@ -1,10 +1,9 @@
 package com.vesperin.base;
 
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.ASTParser;
-
 import java.util.List;
 import java.util.Map;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.ASTParser;
 
 /**
  * A sharable configuration type. Once a configuration is created, then
@@ -57,6 +56,7 @@ public interface Configuration {
    * @param parser a JavaParser to be configured.
    */
   default void configureCompilerOptions(JavaParser parser){
+    @SuppressWarnings("rawtypes")
     final Map options = JavaCore.getOptions();
     JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
     parser.getAstParser().setCompilerOptions(options);
@@ -83,13 +83,13 @@ public interface Configuration {
           List<String> spEntries, List<String> encodings, JavaParser parser){
 
     final String[] cp = (cpEntries == null || cpEntries.isEmpty())
-      ? null : cpEntries.toArray(new String[cpEntries.size()]);
+      ? null : cpEntries.toArray(new String[0]);
 
     final String[] scEntries = (spEntries == null || spEntries.isEmpty())
-      ? null : spEntries.toArray(new String[spEntries.size()]);
+      ? null : spEntries.toArray(new String[0]);
 
     final String[] parserEncodings = (encodings == null || encodings.isEmpty())
-      ? null : encodings.toArray(new String[encodings.size()]);
+      ? null : encodings.toArray(new String[0]);
 
     parser.getAstParser().setEnvironment(
       cp,
