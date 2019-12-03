@@ -10,11 +10,6 @@ import com.vesperin.base.locators.ProgramUnitLocator;
 import com.vesperin.base.locators.SelectedUnit;
 import com.vesperin.base.locators.UnitLocation;
 import com.vesperin.base.locators.UnitLocator;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,6 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 
 
 /**
@@ -132,7 +131,7 @@ public class Context {
     }
 
     final ASTNode node = unit.getParsedNode();
-    context.setCompilationUnit(Jdt.parent(CompilationUnit.class, node));
+    context.setCompilationUnit(CommonJdt.parent(CompilationUnit.class, node));
     return context;
   }
 
@@ -151,7 +150,7 @@ public class Context {
   }
 
   /**
-   * @see {@link UnitLocator#locate(ProgramUnit)} for more information.
+   * @see UnitLocator#locate(ProgramUnit) for additional information
    */
   public List<UnitLocation> locate(ProgramUnit unit){
     return getUnitLocator().locate(unit);
@@ -302,7 +301,7 @@ public class Context {
 
     this.compilationUnit = compilationUnit;
     this.compilationUnit.setProperty(
-        Jdt.SOURCE_FILE_PROPERTY,
+        CommonJdt.SOURCE_FILE_PROPERTY,
         this.getSource()
     );
 
@@ -348,7 +347,7 @@ public class Context {
       this.errors = new ArrayList<>(errors);
 
       if(!this.errors.isEmpty()){
-        Collections.sort(this.errors, new ExceptionComparator());
+        this.errors.sort(new ExceptionComparator());
       }
     }
 

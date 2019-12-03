@@ -1,8 +1,9 @@
 package com.vesperin.tasks;
 
-import com.vesperin.utils.Immutable;
-import com.vesperin.utils.Log;
+import static com.vesperin.tasks.Threads.threadPerCpuExecutor;
 
+import com.vesperin.utils.Immutable;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,8 +12,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.vesperin.tasks.Threads.threadPerCpuExecutor;
 
 
 /**
@@ -23,8 +22,8 @@ public class TaskQueue {
   private static final int FOREVER = 60 * 60 * 24 * 28; // four weeks
   private static final int DEFAULT_CONCURRENT_ACTIONS = 1;
 
-
-  private final Log log;
+  private PrintWriter stdout;
+  private PrintWriter stderr;
 
   private int runningTasks;
   private int runningActions;
@@ -41,24 +40,26 @@ public class TaskQueue {
    * Construct a new TaskQueue object using default values.
    */
   public TaskQueue(){
-    this(Log.verbose(), DEFAULT_CONCURRENT_ACTIONS);
+    this(
+        new PrintWriter(System.out, true),
+        new PrintWriter(System.err, true),
+        DEFAULT_CONCURRENT_ACTIONS
+    );
   }
 
   /**
    * Construct a new TaskQueue object using default values and log object.
    */
-  public TaskQueue(Log log){
-    this(log, DEFAULT_CONCURRENT_ACTIONS);
+  public TaskQueue(PrintWriter stdout, PrintWriter stderr){
+    this(stdout, stderr, DEFAULT_CONCURRENT_ACTIONS);
   }
 
   /**
    * Construct a new TaskQueue object
-   *
-   * @param log log viewer
-   * @param maxConcurrentActions max number of concurrent actions allowed by this task queue.
    */
-  public TaskQueue(Log log, int maxConcurrentActions) {
-    this.log = log;
+  public TaskQueue(PrintWriter stdout, PrintWriter stderr, int maxConcurrentActions) {
+    this.stdout = stdout;
+    this.stderr = stderr;
     this.maxConcurrentActions = maxConcurrentActions;
   }
 
@@ -103,7 +104,7 @@ public class TaskQueue {
   private void calibrateMaxConcurrentActions(){
     final int k = (int) ((Runtime.getRuntime().availableProcessors()) / (1 - 0.03));
 
-    log.info(String.format("Expected number of threads: %d", k));
+    stdout.println(String.format("Expected number of threads: %d", k));
 
     compareMaxConcurrentActionsAndSet(k);
   }
@@ -133,7 +134,7 @@ public class TaskQueue {
 
     final AtomicInteger counter = new AtomicInteger(0);
 
-    ExecutorService runners = threadPerCpuExecutor(log, "TaskQueue");
+    ExecutorService runners = threadPerCpuExecutor(stderr, "TaskQueue");
 
     for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
       runners.execute(() -> {
@@ -149,10 +150,11 @@ public class TaskQueue {
     try {
       runners.awaitTermination(FOREVER, TimeUnit.SECONDS);
 
-      log.info(String.format("Executed tasks: %d", counter.get()));
+      stdout.println(String.format("Executed tasks: %d", counter.get()));
 
     } catch (InterruptedException e) {
-      log.log("e");
+      stdout.println("failed task: " + e.getMessage());
+      e.printStackTrace(stderr);
       throw new AssertionError();
     }
   }
@@ -168,10 +170,12 @@ public class TaskQueue {
     Thread.currentThread().setName(task.toString());
 
     try {
-      task.run(log);
+      task.run(stdout, stderr);
     } finally {
       doneTask(task);
       Thread.currentThread().setName(threadName);
+      stdout.flush();
+      stderr.flush();
     }
 
     return true;
@@ -244,10 +248,6 @@ public class TaskQueue {
    * completed.
    */
   public void printTasks() {
-    if (!log.isVerbose()) {
-      return;
-    }
-
     int i = 0;
     for (Task task : tasks) {
       StringBuilder message = new StringBuilder()
@@ -261,7 +261,7 @@ public class TaskQueue {
         message.append("\n  depends on successful task: ").append(blocker);
       }
 
-      log.info(message.toString());
+      stdout.println(message.toString());
     }
   }
 
@@ -272,14 +272,10 @@ public class TaskQueue {
     for (Task task : failedTasks) {
       String message = "Failed task: " + task + " " + task.result;
       if (task.thrown != null) {
-        log.error(message, task.thrown);
+        stderr.println(message + " " + task.thrown.getMessage());
       } else {
-        log.info(message);
+        stdout.println(message);
       }
-    }
-
-    if (!log.isVerbose()) {
-      return;
     }
 
     for (Task task : tasks) {
@@ -287,17 +283,17 @@ public class TaskQueue {
         .append("Failed to execute task: ").append(task);
       for (Task blocker : task.firstToFinish) {
         if (blocker.result == null) {
-          message.append("\n  blocked by unexecuted task: ").append(blocker);
+          message.append("\n  blocked by non-executed task: ").append(blocker);
         }
       }
       for (Task blocker : task.firstToSuccessfullyFinish) {
         if (blocker.result == null) {
-          message.append("\n  blocked by unexecuted task: ").append(blocker);
+          message.append("\n  blocked by non-executed task: ").append(blocker);
         } else if (blocker.result != TaskResult.SUCCESS) {
           message.append("\n  blocked by unsuccessful task: ").append(blocker);
         }
       }
-      log.info(message.toString());
+      stdout.println(message.toString());
     }
   }
 

@@ -1,6 +1,7 @@
 package com.vesperin.reflects;
 
-import com.vesperin.utils.Expect;
+
+import static com.vesperin.reflects.JavaClass.getTypeName;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
@@ -11,8 +12,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import static com.vesperin.reflects.ClassDefinition.typeNameOrMissing;
 
 /**
  * @author Huascar Sanchez
@@ -62,7 +61,7 @@ public enum TypeLiteral {
 
   public static TypeLiteral from(Type type){
 
-    final Type nonNull = Expect.nonNull(type);
+    final Type nonNull = Objects.requireNonNull(type);
 
     for( TypeLiteral each : values()){
       if(each.matches(nonNull)){
@@ -130,7 +129,7 @@ public enum TypeLiteral {
       }
 
       return (typeOfInterest instanceof Class
-          && isFunctionalInterface((Class) typeOfInterest)
+          && isFunctionalInterface((Class<?>) typeOfInterest)
       );
     }
 
@@ -167,7 +166,7 @@ public enum TypeLiteral {
 
   static class PrimitiveMatcher extends AbstractTypeMatcher {
     @Override public Boolean matches(Type input) {
-      final String typeName = typeNameOrMissing(input);
+      final String typeName = getTypeName(input, "MISSING");
 
       switch (typeName) {
         case "int":
@@ -187,21 +186,21 @@ public enum TypeLiteral {
 
   static class VoidMatcher extends AbstractTypeMatcher {
     @Override public Boolean matches(Type input) {
-      final String typeName = typeNameOrMissing(input);
+      final String typeName = getTypeName(input, "MISSING");
       return "void".equals(typeName);
     }
   }
 
   static class ArrayMatcher extends AbstractTypeMatcher {
     @Override public Boolean matches(Type input) {
-      final String typeName = typeNameOrMissing(input);
+      final String typeName = getTypeName(input, "MISSING");
       return typeName.endsWith("[]") && !(input instanceof GenericArrayType);
     }
   }
 
   static class GenericArrayMatcher extends AbstractTypeMatcher {
     @Override public Boolean matches(Type input) {
-      final String typeName = typeNameOrMissing(input);
+      final String typeName = getTypeName(input, "MISSING");
       return typeName.endsWith("[]") && (input instanceof GenericArrayType);
     }
   }

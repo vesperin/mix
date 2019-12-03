@@ -1,4 +1,4 @@
-package com.vesperin.base.spi;
+package com.vesperin.base;
 
 
 /**

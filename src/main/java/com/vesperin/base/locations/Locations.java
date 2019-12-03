@@ -1,7 +1,7 @@
 package com.vesperin.base.locations;
 
 import com.vesperin.base.Source;
-import com.vesperin.base.Jdt;
+import com.vesperin.base.CommonJdt;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -175,7 +175,7 @@ public class Locations {
    * @return A {@code Location} in the {@code Source} where a ASTNode is found.
    */
   public static Location locate(ASTNode node) {
-    final Source src = Jdt.from(node);
+    final Source src = CommonJdt.from(node);
     return Locations.locate(src, node);
   }
 

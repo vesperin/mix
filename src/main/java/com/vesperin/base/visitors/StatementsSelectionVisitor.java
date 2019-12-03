@@ -1,12 +1,20 @@
 package com.vesperin.base.visitors;
 
+import com.vesperin.base.CommonJdt;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.Jdt;
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.List;
 import java.util.Objects;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.SynchronizedStatement;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 
 /**
  * @author Huascar Sanchez
@@ -123,7 +131,7 @@ public class StatementsSelectionVisitor extends ASTNodesSelectionVisitor {
 
   @Override public void endVisit(SwitchStatement node) {
     if (doAfterValidation(node, getSelectedNodes())) {
-      List<ASTNode> cases = Jdt.getSwitchCases(node);
+      List<ASTNode> cases = CommonJdt.getSwitchCases(node);
       for(ASTNode eachSelected : getSelectedNodes()){
         if(cases.contains(eachSelected)){
           invalidSelection(true);
@@ -162,7 +170,7 @@ public class StatementsSelectionVisitor extends ASTNodesSelectionVisitor {
       if(firstNode == node.getBody() || firstNode == node.getFinally()){
         invalidSelection(true);
       } else {
-        final List catchClauses = node.catchClauses();
+        final List<?> catchClauses = node.catchClauses();
         for(Object eachCatch : catchClauses){
           final CatchClause element = (CatchClause) eachCatch;
           if (element == firstNode || element.getBody() == firstNode) {
@@ -209,9 +217,12 @@ public class StatementsSelectionVisitor extends ASTNodesSelectionVisitor {
     return false;
   }
 
-  protected static boolean contains(List<ASTNode> nodes, List list) {
+  protected static boolean contains(List<ASTNode> nodes, List<?> list) {
+    @SuppressWarnings("unchecked")
+    final List<ASTNode> castList = (List<ASTNode>) list;
+
     for (ASTNode node : nodes) {
-      if (list.contains(node)) return true;
+      if (castList.contains(node)) return true;
     }
 
     return false;

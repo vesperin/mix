@@ -1,18 +1,18 @@
 package com.vesperin.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * @author Huascar Sanchez
+ * Immutable's plaything
  */
 public class Immutable {
   private Immutable() {}
@@ -80,7 +80,9 @@ public class Immutable {
     return stream == null ? set() : stream.collect(toImmutableSet());
   }
 
-  /** split a list into non-view sublists of length size **/
+  /**
+   * Splits a list into non-view sublists of length size
+   */
   public static <T> List<List<T>> split(List<T> list, final int size) {
     if(list == null || list.isEmpty()) return Immutable.list();
 
@@ -92,6 +94,59 @@ public class Immutable {
     }
 
     return Immutable.listOf(parts);
+  }
+
+  /**
+   * Creates an immutable map
+   *
+   * @return an immutable map
+   */
+  public static <K, V> Map<K, V> map(){
+    return Immutable.mapOf(Collections.emptyMap());
+  }
+
+  /**
+   * Converts a mutable map into an immutable one.
+   *
+   * @param map mutable map
+   * @param <K> the output type of the key mapping function
+   * @param <V> the output type of the value mapping function
+   * @return a new immutable map
+   */
+  public static <K, V> Map<K, V> mapOf(Map<? extends K, ? extends V> map){
+    return mapOf(map.entrySet().stream());
+  }
+
+  /**
+   * Converts a stream of Map.Entry objects into an immutable map.
+   * @param stream stream of Map.Entry object.s
+   * @param <K> the output type of the key mapping function
+   * @param <V> the output type of the value mapping function
+   * @return a new immutable map
+   */
+  public static <K, V> Map<K, V> mapOf(Stream<? extends Map.Entry<? extends K, ? extends V>> stream){
+    return stream.collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+
+  /**
+   * Creates a collector that transforms a mutable map into an immutable map.
+   *
+   * @param keyExtractor a mapping function to produce keys
+   * @param valueExtractor a mapping function to produce values
+   * @param <T> the type of the input elements
+   * @param <K> the output type of the key mapping function
+   * @param <V> the output type of the value mapping function
+   * @return a new immutable map
+   */
+  private static <T, K, V> Collector<T, ?, Map<K, V>> toImmutableMap(
+      final Function<? super T, ? extends K> keyExtractor,
+      final Function<? super T, ? extends V> valueExtractor){
+
+    return Collectors.collectingAndThen(
+        Collectors.toMap(keyExtractor, valueExtractor),
+        Collections::unmodifiableMap
+    );
   }
 
 
@@ -119,14 +174,5 @@ public class Immutable {
       Collectors.toSet(),
       Collections::unmodifiableSet
     );
-  }
-
-  public static void main(String[] args) {
-    final Set<Integer> a = new HashSet<>(Arrays.asList(1, 2, 3));
-    final Set<Integer> b = new HashSet<>(Arrays.asList(2, 3, 4));
-
-    final Set<Integer> union = Sets.union(a, b);
-    union.forEach(System.out::println);
-
   }
 }

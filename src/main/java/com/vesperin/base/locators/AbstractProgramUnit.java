@@ -1,16 +1,15 @@
 package com.vesperin.base.locators;
 
 import com.vesperin.base.Context;
+import com.vesperin.base.CommonJdt;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.utils.Expect;
-import com.vesperin.base.Jdt;
 import com.vesperin.base.visitors.StatementsSelectionVisitor;
-import org.eclipse.jdt.core.dom.ASTNode;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
  * @author Huascar Sanchez
@@ -24,11 +23,9 @@ abstract class AbstractProgramUnit implements ProgramUnit {
    * @param identifier the identifier of the program unit.
    */
   AbstractProgramUnit(String identifier){
-    Expect.validArgument(
-      identifier != null && !identifier.isEmpty(), "Invalid identifier"
-    );
-
-    this.name = identifier;
+    this.name = Optional.ofNullable(identifier)
+        .filter(i -> !i.isEmpty())
+        .orElseThrow(IllegalArgumentException::new);
   }
 
   @Override public String getIdentifier() {
@@ -46,7 +43,7 @@ abstract class AbstractProgramUnit implements ProgramUnit {
   }
 
   protected static <T extends ASTNode> T parent(Class<T> klass, ASTNode node){
-    return Jdt.parent(klass, node);
+    return CommonJdt.parent(klass, node);
   }
 
 

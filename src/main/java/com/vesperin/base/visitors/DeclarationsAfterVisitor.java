@@ -1,7 +1,7 @@
 package com.vesperin.base.visitors;
 
 import com.vesperin.base.Scope;
-import com.vesperin.base.spi.BindingRequest;
+import com.vesperin.base.BindingRequest;
 import org.eclipse.jdt.core.dom.*;
 
 /**

@@ -8,8 +8,8 @@ import java.net.URLClassLoader;
 /**
  * @author Huascar Sanchez
  */
-public class Loaders {
-  private Loaders(){}
+public class ClassLoaders {
+  private ClassLoaders(){}
 
   /**
    * Creates a new Classloader for the given external file.

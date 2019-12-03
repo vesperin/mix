@@ -2,7 +2,7 @@ package com.vesperin.base.matchers;
 
 import com.vesperin.base.Context;
 import com.vesperin.base.ParsedUnit;
-import com.vesperin.base.spi.Matcher;
+import com.vesperin.base.Matcher;
 
 /**
  * @author Huascar Sanchez

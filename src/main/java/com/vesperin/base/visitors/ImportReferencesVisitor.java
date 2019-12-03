@@ -1,16 +1,43 @@
 package com.vesperin.base.visitors;
 
-import com.vesperin.base.ScopeAnalyser;
+import com.vesperin.base.CommonJdt;
 import com.vesperin.base.Scope;
+import com.vesperin.base.ScopeAnalyser;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.Jdt;
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
+import org.eclipse.jdt.core.dom.MemberRef;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.MethodRef;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.QualifiedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
+import org.eclipse.jdt.core.dom.TagElement;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 /**
  * @author Huascar Sanchez
@@ -78,7 +105,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
    */
   public Set<String> getImportNameIdentifiers(){
     typeNameImports.addAll(getImportSimpleNames().stream()
-        .map(Jdt::getSimpleNameIdentifier)
+        .map(CommonJdt::getSimpleNameIdentifier)
         .collect(Collectors.toList()));
 
     return typeNameImports;
@@ -102,7 +129,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
 
   private boolean isNodeAffected(ASTNode node) {
     return (this.selection == null
-        || Jdt.isNodeWithinSelection(Jdt.from(root), node, this.selection)
+        || CommonJdt.isNodeWithinSelection(CommonJdt.from(root), node, this.selection)
     );
   }
 
@@ -145,7 +172,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
             return;
           }
 
-          staticImports.add(Jdt.getSimpleNameIdentifier(name));
+          staticImports.add(CommonJdt.getSimpleNameIdentifier(name));
         }
       }
     } else if (binding instanceof IMethodBinding) {
@@ -164,13 +191,13 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
           return;
         }
 
-        staticImports.add(Jdt.getSimpleNameIdentifier(name));
+        staticImports.add(CommonJdt.getSimpleNameIdentifier(name));
       }
     }
 
   }
 
-  private void doVisitChildren(List elements) {
+  private void doVisitChildren(List<?> elements) {
     for (Object eachObject : elements) {
       final ASTNode eachNode = (ASTNode) eachObject;
       eachNode.accept(this);
@@ -359,7 +386,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
 
   @Override public boolean visit(TagElement node) {
     final String        tagName    = node.getTagName();
-    final List<Object>  fragments  = Jdt.typeSafeList(node.fragments());
+    final List<Object>  fragments  = CommonJdt.typeSafeList(node.fragments());
 
     int idx = 0;
 
@@ -403,7 +430,7 @@ public class ImportReferencesVisitor extends SkeletalVisitor {
       typeReferenceFound(qualifier);
     }
 
-    final List parameters = node.parameters();
+    final List<?> parameters = node.parameters();
     if (parameters != null) {
       // visit MethodRefParameter with Type
       doVisitChildren(parameters);

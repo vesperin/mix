@@ -1,8 +1,7 @@
 package com.vesperin.tasks;
 
-import com.vesperin.utils.Expect;
-import com.vesperin.utils.Log;
-
+import java.io.PrintWriter;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -10,26 +9,34 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author Huascar Sanchez
+ * Threads manages creation of executor services
  */
 public class Threads {
   private Threads(){}
 
-  public static ExecutorService threadPerCpuExecutor(Log log, String name) {
-    Expect.validArgument(name != null && !name.isEmpty());
-
-    return fixedThreadsExecutor(log, name, Runtime.getRuntime().availableProcessors());
+  public static ExecutorService threadPerCpuExecutor(String name){
+    return threadPerCpuExecutor(new PrintWriter(System.err), name);
   }
 
-  private static ExecutorService fixedThreadsExecutor(final Log log, String name, int count) {
+  public static ExecutorService threadPerCpuExecutor(PrintWriter stderr, String name) {
+    final String process = Optional.ofNullable(name)
+        .filter(n -> !n.isEmpty())
+        .orElseThrow(IllegalArgumentException::new);
+
+    return fixedThreadsExecutor(
+        stderr, process, Runtime.getRuntime().availableProcessors());
+  }
+
+  private static ExecutorService fixedThreadsExecutor(final PrintWriter stderr, String name, int count) {
     ThreadFactory threadFactory = daemonThreadFactory(name);
 
     return new ThreadPoolExecutor(count, count, 10, TimeUnit.SECONDS,
-      new LinkedBlockingQueue<>(Integer.MAX_VALUE), threadFactory) {
+        new LinkedBlockingQueue<>(Integer.MAX_VALUE), threadFactory) {
 
-      @Override protected void afterExecute(Runnable runnable, Throwable throwable) {
+      @Override
+      protected void afterExecute(Runnable runnable, Throwable throwable) {
         if (throwable != null) {
-          log.error("Unexpected failure from " + runnable, throwable);
+          stderr.println("Unexpected failure from " + runnable + ": " + throwable.getMessage());
         }
       }
     };

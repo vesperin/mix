@@ -1,10 +1,11 @@
 package com.vesperin.reflects;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Method;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class JavaReflectsTest {
 
@@ -14,9 +15,18 @@ public class JavaReflectsTest {
     }
   }
 
-  @Test public void testTypeAnnotation() throws Exception {
+  @Test public void testTypeAnnotation() {
     for (Method each : Hello.class.getDeclaredMethods()){
-      assertTrue(!MethodDefinition.from(each).getReturnType().getAnnotations().isEmpty());
+      assertFalse(JavaMethod.from(each).getReturnType().getAnnotations().isEmpty());
     }
+  }
+
+  @Test public void testFindingClasses() throws Exception {
+    JavaClasses.publicClassesKnownInJRE().forEach(Assert::assertNotNull);
+  }
+
+  @Test public void testFindingClassesInClassloader() throws Exception {
+    JavaClasses.publicClasses(Thread.currentThread().getContextClassLoader())
+        .forEach(Assert::assertNotNull);
   }
 }

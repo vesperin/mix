@@ -84,11 +84,12 @@ public class MatchMaker {
       final ParsedUnit unit = parseJava(context);
       final ASTNode node = unit.getParsedNode();
 
-      final TypeDeclaration parent = Objects.requireNonNull(Jdt.parent(TypeDeclaration.class, node));
+      final TypeDeclaration parent = Objects.requireNonNull(
+          CommonJdt.parent(TypeDeclaration.class, node));
       final String          name   = parent.getName().getIdentifier();
 
       if("MISSING".equals(name)){
-        if(Jdt.requiresMainMethod(parent)){
+        if(CommonJdt.requiresMainMethod(parent)){
           return bindProgramUnitToContext(
               context,
               ParsedUnit.makeUnit(node, true)

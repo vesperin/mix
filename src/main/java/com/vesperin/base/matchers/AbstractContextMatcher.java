@@ -42,13 +42,13 @@ public abstract class AbstractContextMatcher implements ContextMatcher {
 
   protected static boolean isWellConstructedCompilationUnit(int mode, ASTNode node){
     return ASTParser.K_COMPILATION_UNIT == mode
-        && Jdt.isWellConstructedCompilationUnit(node);
+        && CommonJdt.isWellConstructedCompilationUnit(node);
   }
 
 
   protected static boolean isMissingTypeBodyDeclaration(int mode, ASTNode node){
     return mode == ASTParser.K_CLASS_BODY_DECLARATIONS
-        && Jdt.isMissingTypeDeclarationUnit(node);
+        && CommonJdt.isMissingTypeDeclarationUnit(node);
   }
 
   @Override public String toString() {

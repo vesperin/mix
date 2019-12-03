@@ -1,27 +1,21 @@
 package com.vesperin.base;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.vesperin.base.locators.UnitLocation;
 import com.vesperin.base.visitors.MethodDeclarationVisitor;
-import com.vesperin.reflects.AnnotationDefinition;
-import com.vesperin.reflects.MethodDefinition;
-import com.vesperin.utils.Expect;
+import com.vesperin.reflects.JavaAnnotation;
+import com.vesperin.reflects.JavaMethod;
 import com.vesperin.utils.Immutable;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.junit.Test;
 
 /**
  * @author Huascar Sanchez
@@ -79,7 +73,7 @@ public class JavaParserTest {
           )
   );
 
-  @Test public void testTypeAnnotation() throws Exception {
+  @Test public void testTypeAnnotation() {
     final String expectedAnnotationStrValue = "Example.TestingAll(value=1)";
     final Context context = new EclipseJavaParser().parseJava(TypeAnnotatedSRC);
     MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
@@ -88,7 +82,7 @@ public class JavaParserTest {
     testMethodDeclarations(expectedAnnotationStrValue, methodDeclarationVisitor);
   }
 
-  @Test public void testTypeAnnotationWithClassPath() throws Exception {
+  @Test public void testTypeAnnotationWithClassPath() {
       final String expectedAnnotationStrValue =
           "com.vesperin.base.TestingTypeAnnotation("
           + "value=public static final com.vesperin.base.TestingTypeAnnotation.TestEnumValue TOP"
@@ -119,12 +113,12 @@ public class JavaParserTest {
 
   private static void testMethodDeclarations(String expectedAnnotationStrValue, MethodDeclarationVisitor methodDeclarationVisitor) {
     for(MethodDeclaration each : methodDeclarationVisitor.getMethodDeclarations()){
-      final MethodDefinition definition = MethodDefinition.from(each);
+      final JavaMethod definition = JavaMethod.from(each);
       System.out.println(definition);
 
       assertEquals(1, definition.getReturnType().getAnnotations().size());
-      for (AnnotationDefinition annotationDefinition : definition.getReturnType().getAnnotations()) {
-        assertEquals(expectedAnnotationStrValue, annotationDefinition.toString());
+      for (JavaAnnotation annotationDef : definition.getReturnType().getAnnotations()) {
+        assertEquals(expectedAnnotationStrValue, annotationDef.toString());
       }
     }
   }
@@ -144,7 +138,7 @@ public class JavaParserTest {
   }
 
 
-  @Test public void testBasicParsing() throws Exception {
+  @Test public void testBasicParsing() {
 
     final JavaParser parser = new EclipseJavaParser();
 

@@ -1,4 +1,4 @@
-package com.vesperin.base.spi;
+package com.vesperin.base;
 
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;

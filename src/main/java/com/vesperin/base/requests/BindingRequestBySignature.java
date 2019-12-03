@@ -1,6 +1,6 @@
 package com.vesperin.base.requests;
 
-import com.vesperin.base.spi.BindingRequest;
+import com.vesperin.base.BindingRequest;
 import com.vesperin.base.Scope;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;

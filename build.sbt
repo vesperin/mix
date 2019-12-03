@@ -9,7 +9,7 @@ name := "mix"
 // organization name (e.g., the package name of the project)
 organization := "com.vesperin"
 
-version := "0.1"
+version := "0.2"
 
 // project description
 description := "Utilities (base mix) needed by vesperin's features"
@@ -20,7 +20,7 @@ publishMavenStyle := true
 // Do not append Scala versions to the generated artifacts
 crossPaths := false
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.13.0"
 
 // This forbids including Scala related libraries into the dependency
 autoScalaLibrary := false

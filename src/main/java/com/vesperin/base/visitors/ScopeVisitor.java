@@ -1,13 +1,27 @@
 package com.vesperin.base.visitors;
 
+import com.vesperin.base.BindingRequest;
 import com.vesperin.base.Scope;
 import com.vesperin.base.locations.Location;
 import com.vesperin.base.locations.Locations;
-import com.vesperin.base.spi.BindingRequest;
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.List;
 import java.util.Objects;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
+import org.eclipse.jdt.core.dom.TypeParameter;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 /**
  * @author Huascar Sanchez
@@ -161,7 +175,7 @@ public class ScopeVisitor extends ASTVisitorWithHierarchicalWalk {
     return !breakStatement && isInsideScope(node, scope);
   }
 
-  private void visitBackwards(List list) {
+  private void visitBackwards(List<?> list) {
     if (breakStatement) return;
 
     for (int i= list.size() - 1; i >= 0; i--) {

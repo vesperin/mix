@@ -1,6 +1,6 @@
 package com.vesperin.base;
 
-import com.vesperin.utils.Expect;
+import java.util.Objects;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -27,7 +27,7 @@ public class EclipseJavaParser implements JavaParser {
    * @param configuration JavaParser's configuration
    */
   public EclipseJavaParser(Configuration configuration){
-    this.configuration = Expect.nonNull(configuration);;
+    this.configuration = Objects.requireNonNull(configuration);
     this.astParser = ASTParser.newParser(AST.JLS8);
     this.configuration.configure(this);
   }

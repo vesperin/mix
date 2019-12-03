@@ -5,8 +5,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +33,6 @@ public class Command {
   private static final ScheduledExecutorService timer = Executors
     .newSingleThreadScheduledExecutor();
 
-  private Log log;
   private List<String>  args;
 
   private final Map<String, String> environment;
@@ -32,30 +43,28 @@ public class Command {
   private volatile Process  process;
   private volatile boolean  destroyed;
   private volatile long     timeoutNanoTime;
+  private final PrintWriter stdout;
+  private final PrintWriter stderr;
 
   /**
    * Constructs a new Command object for
    * a list of arguments.
-   *
-   * @param args the list of arguments.
    */
   public Command(List<String> args){
-    this(Log.verbose(), args);
+    this(new PrintWriter(System.out), new PrintWriter(System.err), args);
   }
 
   /**
    * Constructs a new command.
-   *
-   * @param log the log viewer
-   * @param args the list of arguments needed by the command
    */
-  public Command(Log log, List<String> args){
-    this.log          = log;
-    this.args         = new ArrayList<>(args);
-    this.environment  = Collections.emptyMap();
+  public Command(PrintWriter stdout, PrintWriter stderr, List<String> args){
+    this.stdout = stdout;
+    this.stderr = stderr;
+    this.args = new ArrayList<>(args);
+    this.environment = Collections.emptyMap();
 
-    this.workingDirectory         = null;
-    this.permitNonZeroExitStatus  = false;
+    this.workingDirectory = null;
+    this.permitNonZeroExitStatus = false;
   }
 
   /**
@@ -66,12 +75,13 @@ public class Command {
   private Command(Builder builder){
     final Builder nonNullBuilder = Objects.requireNonNull(builder);
 
-    this.log          = nonNullBuilder.log;
-    this.args         = new ArrayList<>(nonNullBuilder.args);
-    this.environment  = nonNullBuilder.env;
+    this.stdout = builder.stdout;
+    this.stderr = builder.stderr;
+    this.args = new ArrayList<>(nonNullBuilder.args);
+    this.environment = nonNullBuilder.env;
 
-    this.workingDirectory         = nonNullBuilder.workingDirectory;
-    this.permitNonZeroExitStatus  = nonNullBuilder.permitNonZeroExitStatus;
+    this.workingDirectory = nonNullBuilder.workingDirectory;
+    this.permitNonZeroExitStatus = nonNullBuilder.permitNonZeroExitStatus;
 
     // checks if we maxed out the number of budgeted arguments
     if (nonNullBuilder.maxCommandLength != -1) {
@@ -83,15 +93,19 @@ public class Command {
     }
   }
 
+  /**
+   * Creates a Command.Builder object
+   */
+  public static Builder of(){
+    return new Builder();
+  }
+
 
   /**
    * Creates a Command.Builder object
-   *
-   * @param log the execution log
-   * @return a new command builder object
    */
-  public static Builder of(Log log){
-    return new Builder(log);
+  public static Builder of(PrintWriter stdout, PrintWriter stderr){
+    return new Builder(stdout, stderr);
   }
 
   /**
@@ -114,7 +128,7 @@ public class Command {
 
     processBuilder.environment().putAll(environment);
 
-    log.info(String.format("Current process: %s", toString()));
+    stdout.println(String.format("Current process: %s", toString()));
 
     process = processBuilder.start();
   }
@@ -151,14 +165,13 @@ public class Command {
       throw new IllegalStateException("Not started!");
     }
 
-    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getInputStream(), "UTF-8"))) {
+    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8))) {
       final List<String> outputLines = new ArrayList<>();
 
       String outputLine;
       while ((outputLine = bufferedReader.readLine()) != null) {
-        if (log != null) {
-          log.info(outputLine);
-        }
+
+        stdout.println(outputLine);
 
         outputLines.add(outputLine);
       }
@@ -223,9 +236,9 @@ public class Command {
     try {
       process.waitFor();
       int exitValue = process.exitValue();
-      log.info("received exit value " + exitValue + " from destroyed command " + this);
+      stdout.println("received exit value " + exitValue + " from destroyed command " + this);
     } catch (IllegalThreadStateException | InterruptedException destroyUnsuccessful) {
-      log.warn("couldn't destroy " + this);
+      stderr.println("couldn't destroy " + this);
     }
   }
 
@@ -242,14 +255,14 @@ public class Command {
     new TimeoutTask() {
       @Override protected void onTimeout(Process process) {
         // send a quit signal immediately
-        log.info("sending quit signal to command " + Command.this);
+        stdout.println("sending quit signal to command " + Command.this);
         sendQuitSignal(process);
 
         // hard kill in 2 seconds
         timeoutNanoTime = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
         new TimeoutTask() {
           @Override protected void onTimeout(Process process) {
-            log.info("killing timed out command " + Command.this);
+            stdout.println("killing timed out command " + Command.this);
             destroy();
           }
         }.schedule();
@@ -262,7 +275,7 @@ public class Command {
       Arrays.asList("kill", "-3", Integer.toString(getPid(process)))
     );
 
-    new Command(log, args).execute();
+    new Command(args).execute();
   }
 
   /**
@@ -302,7 +315,8 @@ public class Command {
    * Command builder
    */
   public static class Builder {
-    private final Log log;
+    private final PrintWriter stdout;
+    private final PrintWriter stderr;
     private final List<String>        args;
     private final Map<String, String> env;
 
@@ -313,24 +327,26 @@ public class Command {
     private final Set<String> seenBefore;
     private final Set<String> uncheckedSet;
 
+    Builder(){
+      this(new PrintWriter(System.out), new PrintWriter(System.err));
+    }
 
     /**
      * Creates a command builder.
-     *
-     * @param log the log viewer that prints out builder actions.
      */
-    Builder(Log log){
-      this.log = Objects.requireNonNull(log);
+    Builder(PrintWriter stdout, PrintWriter stderr){
+      this.stdout = stdout;
+      this.stderr = stderr;
 
-      this.workingDirectory         = null;
-      this.permitNonZeroExitStatus  = false;
+      this.workingDirectory = null;
+      this.permitNonZeroExitStatus = false;
 
       this.maxCommandLength = Integer.MAX_VALUE;
 
       this.args = new ArrayList<>();
-      this.env  = new LinkedHashMap<>();
+      this.env = new LinkedHashMap<>();
 
-      this.seenBefore   = new LinkedHashSet<>();
+      this.seenBefore = new LinkedHashSet<>();
       this.uncheckedSet = new LinkedHashSet<>();
     }
 
