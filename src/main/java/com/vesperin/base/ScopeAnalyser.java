@@ -67,7 +67,8 @@ public class ScopeAnalyser {
   }
 
   /**
-   * Returns the bindings of local type declarations of local objects in a {@link Block} object.
+   * Returns the bindings of local type declarations of local objects in a
+   * {@link Block} object.
    *
    * @param node  the node to check
    * @param flags the scope flags
@@ -78,16 +79,15 @@ public class ScopeAnalyser {
   }
 
   /**
-   * Returns the bindings of variable declarations (including fields, non local fields, parameters).
+   * Returns the bindings of variable declarations (including fields, non local
+   * fields, parameters).
    */
   public static List<IBinding> getAllDeclarations(ASTNode node, int flags, boolean focusOnFields) {
 
     ASTNode declaration = CommonJdt.findParentStatement(node);
 
     if (declaration == null && !focusOnFields) {
-      declaration = CommonJdt.getChildren(node).stream()
-        .filter(s -> s instanceof Block)
-        .findFirst().orElse(null);
+      declaration = CommonJdt.getChildren(node).stream().filter(s -> s instanceof Block).findFirst().orElse(null);
     }
 
     while (declaration instanceof Statement && declaration.getNodeType() != ASTNode.BLOCK) {
@@ -96,11 +96,7 @@ public class ScopeAnalyser {
 
     if (declaration instanceof Block) {
       final BindingRequestBySignature request = new BindingRequestBySignature();
-      final DeclarationsAfterVisitor visitor = new DeclarationsAfterVisitor(
-        node.getStartPosition(),
-        flags,
-        request
-      );
+      final DeclarationsAfterVisitor visitor = new DeclarationsAfterVisitor(node.getStartPosition(), flags, request);
 
       declaration.accept(visitor);
 
@@ -114,15 +110,14 @@ public class ScopeAnalyser {
     typeBindingsVisited.clear();
   }
 
-
   /**
    * Collects all bindings available in a type and in its hierarchy.
    *
    * @param binding the type binding.
    * @param flags   the flags that specify the elements to report.
    * @param request the binding request strategy.
-   * @return return true if the request has reported the
-   * binding as found and no further results are required.
+   * @return return true if the request has reported the binding as found and no
+   *         further results are required.
    */
   private boolean collectsInheritedElements(ITypeBinding binding, int flags, BindingRequest request) {
     if (!typeBindingsVisited.add(binding)) {
@@ -144,7 +139,7 @@ public class ScopeAnalyser {
 
   private boolean collectInterfaceBindings(ITypeBinding binding, int flags, BindingRequest request) {
     final ITypeBinding[] interfaces = binding.getInterfaces();
-    // includes looking for methods:  abstract and then unimplemented methods
+    // includes looking for methods: abstract and then unimplemented methods
     for (ITypeBinding eachInterface : interfaces) {
       if (collectsInheritedElements(eachInterface, flags, request)) {
         return true;
@@ -203,14 +198,15 @@ public class ScopeAnalyser {
     return false;
   }
 
-
   /**
-   * Collects all elements available in a type: its hierarchy and its outer scopes.
+   * Collects all elements available in a type: its hierarchy and its outer
+   * scopes.
    *
    * @param binding The type binding
    * @param flags   Flags defining the elements to report
    * @param request the request to which all results are reported
-   * @return return <code>true</code> if the request has reported the binding as found and no further results are required
+   * @return return <code>true</code> if the request has reported the binding as
+   *         found and no further results are required
    */
   private boolean collectTypeDeclarations(ITypeBinding binding, int flags, BindingRequest request) {
     if (Scope.isTypesFlagAvailable(flags) && !binding.isAnonymous()) {
@@ -237,10 +233,16 @@ public class ScopeAnalyser {
         return collectTypeDeclarations(declaringClass, flags, request);
       } else if (Scope.isTypesFlagAvailable(flags)) {
         if (root.findDeclaringNode(binding) != null) {
-          List<TypeDeclaration> types = CommonJdt.typeSafeList(TypeDeclaration.class, root.types());
-          for (TypeDeclaration type : types) {
-            if (request.accept(type.resolveBinding())) {
-              return true;
+          for (Object each : root.types()) {
+            final ASTNode node = (ASTNode) each;
+            if (node instanceof TypeDeclaration) {
+              if (request.accept(((TypeDeclaration) node).resolveBinding())) {
+                return true;
+              }
+            } else if (node instanceof EnumDeclaration) {
+              if (request.accept(((EnumDeclaration) node).resolveBinding())) {
+                return true;
+              }
             }
           }
         }
@@ -250,15 +252,15 @@ public class ScopeAnalyser {
     return false;
   }
 
-  private boolean collectOuterDeclarationsForLocalType(ITypeBinding localBinding, int flags, BindingRequest bindingRequest) {
+  private boolean collectOuterDeclarationsForLocalType(ITypeBinding localBinding, int flags,
+      BindingRequest bindingRequest) {
     final ASTNode node = root.findDeclaringNode(localBinding);
 
     if (node == null) {
       return false;
     }
 
-    if (node instanceof AbstractTypeDeclaration
-      || node instanceof AnonymousClassDeclaration) {
+    if (node instanceof AbstractTypeDeclaration || node instanceof AnonymousClassDeclaration) {
 
       if (collectLocalDeclarations(node.getParent(), flags, bindingRequest)) {
         return true;
@@ -285,42 +287,30 @@ public class ScopeAnalyser {
     final ASTNode parent = selector.getParent();
 
     switch (parent.getNodeType()) {
-      case ASTNode.METHOD_INVOCATION:
-        return getTypeBinding(
-          selector,
-          (MethodInvocation) parent
-        );
-      case ASTNode.QUALIFIED_NAME:
-        return getTypeBinding(
-          selector,
-          (QualifiedName) parent
-        );
-      case ASTNode.FIELD_ACCESS:
-        return getTypeBinding(
-          selector,
-          (FieldAccess) parent
-        );
-      case ASTNode.SUPER_FIELD_ACCESS: {
-        final ITypeBinding bindingOfParentType = getBindingOfParentType(parent);
-        final ITypeBinding nonNullBinding = Objects.requireNonNull(bindingOfParentType);
+    case ASTNode.METHOD_INVOCATION:
+      return getTypeBinding(selector, (MethodInvocation) parent);
+    case ASTNode.QUALIFIED_NAME:
+      return getTypeBinding(selector, (QualifiedName) parent);
+    case ASTNode.FIELD_ACCESS:
+      return getTypeBinding(selector, (FieldAccess) parent);
+    case ASTNode.SUPER_FIELD_ACCESS: {
+      final ITypeBinding bindingOfParentType = getBindingOfParentType(parent);
+      final ITypeBinding nonNullBinding = Objects.requireNonNull(bindingOfParentType);
 
-        return nonNullBinding.getSuperclass();
-      }
-      case ASTNode.SUPER_METHOD_INVOCATION: {
-        return getTypeBinding(
-          selector,
-          parent
-        );
-      }
-      default:
-        if (parent instanceof Type) {
-          ASTNode normalizedNode = getNormalizedNode(parent);
-          if (normalizedNode.getLocationInParent() == ClassInstanceCreation.TYPE_PROPERTY) {
-            ClassInstanceCreation creation = (ClassInstanceCreation) normalizedNode.getParent();
-            return getBinding(creation.getExpression());
-          }
+      return nonNullBinding.getSuperclass();
+    }
+    case ASTNode.SUPER_METHOD_INVOCATION: {
+      return getTypeBinding(selector, parent);
+    }
+    default:
+      if (parent instanceof Type) {
+        ASTNode normalizedNode = getNormalizedNode(parent);
+        if (normalizedNode.getLocationInParent() == ClassInstanceCreation.TYPE_PROPERTY) {
+          ClassInstanceCreation creation = (ClassInstanceCreation) normalizedNode.getParent();
+          return getBinding(creation.getExpression());
         }
-        return null;
+      }
+      return null;
     }
   }
 
@@ -375,11 +365,7 @@ public class ScopeAnalyser {
       final ITypeBinding parentTypeBinding = getBindingOfParentTypeContext(selector);
       if (parentTypeBinding != null) {
         final ITypeBinding binding = getQualifier(selector);
-        final BindingRequestByValue request = new BindingRequestByValue(
-          declaration,
-          parentTypeBinding,
-          flags
-        );
+        final BindingRequestByValue request = new BindingRequestByValue(declaration, parentTypeBinding, flags);
 
         if (binding == null) {
           collectLocalDeclarations(selector, flags, request);
@@ -411,7 +397,6 @@ public class ScopeAnalyser {
     return collectLocalDeclarations(node, Locations.locate(node), flags, request);
   }
 
-
   private boolean collectLocalDeclarations(ASTNode node, Location location, int flags, BindingRequest request) {
     if (Scope.isVariablesFlagAvailable(flags) || Scope.isTypesFlagAvailable(flags)) {
       final BodyDeclaration declaration = findParentBodyDeclaration(node);
@@ -424,7 +409,6 @@ public class ScopeAnalyser {
     return false;
   }
 
-
   public static BodyDeclaration findParentBodyDeclaration(ASTNode node) {
     while ((node != null) && (!(node instanceof BodyDeclaration))) {
       node = node.getParent();
@@ -432,7 +416,6 @@ public class ScopeAnalyser {
 
     return (BodyDeclaration) node;
   }
-
 
   private static boolean hasEnumConstants(IBinding declaration, ITypeBinding binding) {
     final IVariableBinding[] declaredFields = binding.getDeclaredFields();
@@ -445,7 +428,6 @@ public class ScopeAnalyser {
 
     return false;
   }
-
 
   public IBinding[] getDeclarationsInScope(SimpleName selector, int flags) {
     try {
@@ -480,7 +462,6 @@ public class ScopeAnalyser {
     }
   }
 
-
   public IBinding[] getDeclarationsInScope(Location location, int flags) {
 
     final ASTNode node = selectNodeWithinRange(root, location);
@@ -497,7 +478,7 @@ public class ScopeAnalyser {
     if ((node instanceof MethodDeclaration) || ((node instanceof Statement))) {
 
       // include the enclosing unit
-      if((node instanceof MethodDeclaration) && Scope.isMethodsFlagAvailable(flags)){
+      if ((node instanceof MethodDeclaration) && Scope.isMethodsFlagAvailable(flags)) {
         final IMethodBinding methodBinding = ((MethodDeclaration) node).resolveBinding();
         bindingsInMethod.add(methodBinding);
 
@@ -509,7 +490,7 @@ public class ScopeAnalyser {
 
       return bindingsInMethod.toArray(new IBinding[0]);
 
-    } else if (node instanceof CompilationUnit){
+    } else if (node instanceof CompilationUnit) {
       return getDeclarationsInCompilationUnit(location, flags, node);
     }
 
@@ -519,25 +500,14 @@ public class ScopeAnalyser {
   public Set<IBinding> getAllBindings(Location location, ASTNode node) {
 
     final Set<IBinding> a = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.VARIABLES, node))
-          .filter((onlyLocalVars(location.getSource().getName())))
-      )
-    );
+        Immutable.setOf(Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.VARIABLES, node))
+            .filter((onlyLocalVars(location.getSource().getName())))));
 
-    final Set<IBinding> b = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.METHODS, node))
-          .filter((onlyLocalMethods()))
-      )
-    );
+    final Set<IBinding> b = new HashSet<>(Immutable.setOf(
+        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.METHODS, node)).filter((onlyLocalMethods()))));
 
-    final Set<IBinding> c = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.TYPES, node))
-          .filter((onlyLocalInnerTypes()))
-      )
-    );
+    final Set<IBinding> c = new HashSet<>(Immutable.setOf(
+        Arrays.stream(getDeclarationsInCompilationUnit(location, Scope.TYPES, node)).filter((onlyLocalInnerTypes()))));
 
     return Sets.union(Sets.union(a, b), c);
   }
@@ -548,7 +518,6 @@ public class ScopeAnalyser {
       final BindingRequestBySignature request = new BindingRequestBySignature(binding, flags);
 
       collectLocalDeclarations(node, location, flags, request);
-
 
       if (binding != null) {
         collectTypeDeclarations(binding, flags, request);
@@ -574,7 +543,6 @@ public class ScopeAnalyser {
     return result.toArray(new IVariableBinding[0]);
   }
 
-
   public static ASTNode getNormalizedNode(ASTNode node) {
     ASTNode current = node;
     // normalize name
@@ -583,8 +551,8 @@ public class ScopeAnalyser {
     }
 
     // normalize type
-    if (QualifiedType.NAME_PROPERTY.equals(current.getLocationInParent()) ||
-      SimpleType.NAME_PROPERTY.equals(current.getLocationInParent())) {
+    if (QualifiedType.NAME_PROPERTY.equals(current.getLocationInParent())
+        || SimpleType.NAME_PROPERTY.equals(current.getLocationInParent())) {
       current = current.getParent();
     }
     // normalize parameterized types
@@ -594,13 +562,12 @@ public class ScopeAnalyser {
     return current;
   }
 
-
   /**
-   * Gets the type binding of the node's type context or null if the node is an annotation,
-   * type parameter or super type declaration of a top level type.
+   * Gets the type binding of the node's type context or null if the node is an
+   * annotation, type parameter or super type declaration of a top level type.
    * <p>
-   * The result of this method is equal to the result of {@link #getBindingOfParentType(ASTNode)}
-   * for nodes in the type's body.
+   * The result of this method is equal to the result of
+   * {@link #getBindingOfParentType(ASTNode)} for nodes in the type's body.
    *
    * @param node ASTNode object
    * @return the type binding of the node's parent type context
@@ -613,8 +580,7 @@ public class ScopeAnalyser {
         final AbstractTypeDeclaration declaration = (AbstractTypeDeclaration) node;
         if (lastLocation == declaration.getBodyDeclarationsProperty()) {
           return declaration.resolveBinding();
-        } else if (declaration instanceof EnumDeclaration
-          && lastLocation == EnumDeclaration.ENUM_CONSTANTS_PROPERTY) {
+        } else if (declaration instanceof EnumDeclaration && lastLocation == EnumDeclaration.ENUM_CONSTANTS_PROPERTY) {
 
           return declaration.resolveBinding();
         }
@@ -642,7 +608,7 @@ public class ScopeAnalyser {
       } else if (node instanceof AnonymousClassDeclaration) {
         return ((AnonymousClassDeclaration) node).resolveBinding();
       } else if (node instanceof CompilationUnit) {
-        node = (TypeDeclaration) ((CompilationUnit) node).types().get(0);
+        node = (ASTNode) ((CompilationUnit) node).types().get(0);
         continue;
       }
 
@@ -654,8 +620,8 @@ public class ScopeAnalyser {
 
   /**
    * Gets the used variable names (in particular non-static fields, static fields)
-   * within some given scope (starting at offset). This scope includes any super class
-   * extended by the class currently being inspected.
+   * within some given scope (starting at offset). This scope includes any super
+   * class extended by the class currently being inspected.
    *
    * @param offset the starting location.
    * @return a collection of used names; empty if none found.
@@ -678,21 +644,19 @@ public class ScopeAnalyser {
     final List<ImportDeclaration> imports = CommonJdt.typeSafeList(ImportDeclaration.class, root.imports());
 
     final List<String> filtered = imports.stream()
-      .filter(eachImportDeclaration -> eachImportDeclaration.isStatic()
-        && !eachImportDeclaration.isOnDemand())
-      .map(eachImportDeclaration -> CommonJdt.getSimpleNameIdentifier(eachImportDeclaration.getName()))
-      .collect(Collectors.toList());
+        .filter(eachImportDeclaration -> eachImportDeclaration.isStatic() && !eachImportDeclaration.isOnDemand())
+        .map(eachImportDeclaration -> CommonJdt.getSimpleNameIdentifier(eachImportDeclaration.getName()))
+        .collect(Collectors.toList());
 
     result.addAll(filtered);
 
     return result;
   }
 
-
   /**
-   * Similar to {@link ScopeAnalyser#getUsedFieldNames(Location)}}, we collect the bindings of
-   * non static fields, and static fields within some given scope. Local variable and parameters
-   * are not collected.
+   * Similar to {@link ScopeAnalyser#getUsedFieldNames(Location)}}, we collect the
+   * bindings of non static fields, and static fields within some given scope.
+   * Local variable and parameters are not collected.
    *
    * @param flags the indicators of the target nodes to be looked at.
    * @return an array of bindings
@@ -713,7 +677,6 @@ public class ScopeAnalyser {
     }
   }
 
-
   private static ASTNode selectNodeWithinRange(CompilationUnit root, Location range) {
     final StatementsSelectionVisitor selector = new StatementsSelectionVisitor(range);
     root.accept(selector);
@@ -721,24 +684,27 @@ public class ScopeAnalyser {
     return selector.getFirstSelectedNode();
   }
 
-
-  private static String ensureNonNullName(ITypeBinding binding){
-    if(binding == null) return "";
+  private static String ensureNonNullName(ITypeBinding binding) {
+    if (binding == null)
+      return "";
 
     return binding.getName();
   }
 
-  private static String ensureNonNullClassName(IVariableBinding binding, String className){
-    if(binding == null) return "";
+  private static String ensureNonNullClassName(IVariableBinding binding, String className) {
+    if (binding == null)
+      return "";
 
     final IMethodBinding declaringMethod = binding.getDeclaringMethod();
-    if(declaringMethod == null) {
-      if(binding.isField()) {
+    if (declaringMethod == null) {
+      if (binding.isField()) {
         final IVariableBinding fieldDeclaration = binding.getVariableDeclaration();
-        if(fieldDeclaration == null) return className;
+        if (fieldDeclaration == null)
+          return className;
 
         final ITypeBinding fieldOwnerBinding = fieldDeclaration.getDeclaringClass();
-        if(fieldOwnerBinding == null) return className;
+        if (fieldOwnerBinding == null)
+          return className;
 
         return fieldOwnerBinding.getName();
       }
@@ -747,24 +713,25 @@ public class ScopeAnalyser {
     }
 
     final ITypeBinding declaringClass = declaringMethod.getDeclaringClass();
-    if(declaringClass == null) return className;
+    if (declaringClass == null)
+      return className;
 
     return declaringClass.getName();
   }
 
-  private static Predicate<IBinding> onlyLocalMethods(){
+  private static Predicate<IBinding> onlyLocalMethods() {
     return p -> !"Object".equals(ensureNonNullName(((IMethodBinding) p).getDeclaringClass()));
   }
 
-  private static Predicate<IBinding> onlyLocalVars(String localClassName){
+  private static Predicate<IBinding> onlyLocalVars(String localClassName) {
     return p -> !"Object".equals(ensureNonNullClassName(((IVariableBinding) p), localClassName));
   }
 
-  private static Predicate<IBinding> onlyLocalInnerTypes(){
+  private static Predicate<IBinding> onlyLocalInnerTypes() {
     return p -> !"Object".equals(ensureNonNullName(((ITypeBinding) p).getDeclaringClass()));
   }
 
-  public Set<IBinding> getUsedLocalDeclarationsInScope(Location scope){
+  public Set<IBinding> getUsedLocalDeclarationsInScope(Location scope) {
     return getDeclarationsWithinScope(scope, true);
   }
 
@@ -772,35 +739,21 @@ public class ScopeAnalyser {
     return getDeclarationsWithinScope(scope, false);
   }
 
-
   public Set<IBinding> getDeclarationsWithinScope(Location scope, boolean onlyLocalDeclarations) {
     final Predicate<IBinding> all = p -> true;
 
-
     final Set<IBinding> methods = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInScope(scope, Scope.METHODS))
-          .filter((onlyLocalDeclarations ? onlyLocalMethods() : all))
-      )
-    );
+        Immutable.setOf(Arrays.stream(getDeclarationsInScope(scope, Scope.METHODS))
+            .filter((onlyLocalDeclarations ? onlyLocalMethods() : all))));
 
     final Set<IBinding> fields = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInScope(scope, Scope.VARIABLES))
-          .filter((onlyLocalDeclarations ? onlyLocalVars(scope.getSource().getName()) : all))
-      )
-    );
+        Immutable.setOf(Arrays.stream(getDeclarationsInScope(scope, Scope.VARIABLES))
+            .filter((onlyLocalDeclarations ? onlyLocalVars(scope.getSource().getName()) : all))));
 
-    final Set<IBinding> types = new HashSet<>(
-      Immutable.setOf(
-        Arrays.stream(getDeclarationsInScope(scope, Scope.TYPES))
-          .filter((onlyLocalDeclarations ? onlyLocalInnerTypes() : all))
-      )
-    );
-
+    final Set<IBinding> types = new HashSet<>(Immutable.setOf(Arrays.stream(getDeclarationsInScope(scope, Scope.TYPES))
+        .filter((onlyLocalDeclarations ? onlyLocalInnerTypes() : all))));
 
     return Sets.union(types, Sets.union(methods, fields));
   }
-
 
 }

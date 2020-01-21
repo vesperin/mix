@@ -1,5 +1,7 @@
 package com.vesperin.reflects;
 
+import static org.eclipse.jdt.core.Signature.getTypeErasure;
+
 import com.vesperin.base.CommonJdt;
 import com.vesperin.utils.Immutable;
 import com.vesperin.utils.Sets;
@@ -41,7 +43,7 @@ public class JavaClass {
 
   static {
     final Map<String, String> lookUpTable = new HashMap<>();
-    //Primitive types
+    // Primitive types
     lookUpTable.put("byte", "java.lang.Byte");
     lookUpTable.put("short", "java.lang.Short");
     lookUpTable.put("int", "java.lang.Integer");
@@ -61,7 +63,6 @@ public class JavaClass {
 
     PRIMITIVE_TO_OBJECT = Collections.unmodifiableMap(lookUpTable);
   }
-
 
   private final JavaPack javaPack;
   private final String typeName;
@@ -94,7 +95,8 @@ public class JavaClass {
   }
 
   /**
-   * Construct a new class definition for a given {@link Type} and lambda expression check.
+   * Construct a new class definition for a given {@link Type} and lambda
+   * expression check.
    *
    * @param type the {@link Type} of interest.
    * @param flag whether this class uses lambda expressions or not.
@@ -104,8 +106,8 @@ public class JavaClass {
   }
 
   /**
-   * Construct a new class definition for a given {@link Type}, filter flags, generic representation
-   * of the class.
+   * Construct a new class definition for a given {@link Type}, filter flags,
+   * generic representation of the class.
    *
    * @param type          the {@link Type} of interest.
    * @param genericString string representation of class.
@@ -115,8 +117,7 @@ public class JavaClass {
     this(type, onlyFewPackageDefinitionFunction(genericString), flag, new HashSet<>());
   }
 
-  private JavaClass(Type type, String genericString, int flag,
-      Set<JavaAnnotation> annotations) {
+  private JavaClass(Type type, String genericString, int flag, Set<JavaAnnotation> annotations) {
     this(type, onlyFewPackageDefinitionFunction(genericString), flag, annotations);
   }
 
@@ -132,8 +133,7 @@ public class JavaClass {
    * @param flag        whether this class uses lambda expressions or not.
    * @param annotations type annotations
    */
-  private JavaClass(Type type, Function<JavaPack, String> pkgFunction, int flag,
-      Set<JavaAnnotation> annotations) {
+  private JavaClass(Type type, Function<JavaPack, String> pkgFunction, int flag, Set<JavaAnnotation> annotations) {
 
     this.javaPack = JavaPack.from(type);
 
@@ -151,30 +151,22 @@ public class JavaClass {
       this.typeName = pkgFunction.apply(javaPack);
 
       if (TypeLiteral.FUNCTIONAL_INTERFACE == typeLiteral && ReflectConst.USE_LAMBDA_EXPRESSION == flag) {
-        this.simpleForm = lambdaIfFunctionalInterface(type)
-            .orElse(typeName);
+        this.simpleForm = lambdaIfFunctionalInterface(type).orElse(typeName);
       } else {
         this.simpleForm = typeName;
       }
 
-      final String toStringAnnotation = (annotations.isEmpty()
-          ? "" : annotations.toString() + " ");
+      final String toStringAnnotation = (annotations.isEmpty() ? "" : annotations.toString() + " ");
 
       final String packageToString = javaPack.toString();
-      this.canonicalName = (packageToString.isEmpty()
-          ? (toStringAnnotation) + typeName
-          : (toStringAnnotation) + packageToString + "." + this.typeName
-      );
+      this.canonicalName = (packageToString.isEmpty() ? (toStringAnnotation) + typeName
+          : (toStringAnnotation) + packageToString + "." + this.typeName);
 
-      this.reifiedCanonicalName = canonicalName.replace(genericsSubstring(canonicalName), "");
+      this.reifiedCanonicalName = JavaClass.getRawTypeName(canonicalName);
     }
 
     this.isDeprecated = isDeprecated(type);
-
-    this.className = (typeName.contains("<") && typeName.contains(">")
-        ? typeName.replace(genericsSubstring(typeName), "")
-        : typeName);
-
+    this.className = JavaClass.getRawTypeName(typeName);
   }
 
   /**
@@ -185,8 +177,8 @@ public class JavaClass {
    * @param isDeprecated true if this class is deprecated; false otherwise.
    * @param isAbstract   true if this class is an abstract class; false otherwise.
    */
-  private JavaClass(JavaPack pkgDef, String typeName,
-      boolean isDeprecated, boolean isAbstract, Set<JavaAnnotation> annotations) {
+  private JavaClass(JavaPack pkgDef, String typeName, boolean isDeprecated, boolean isAbstract,
+      Set<JavaAnnotation> annotations) {
 
     this.javaPack = pkgDef;
     this.typeLiteral = TypeLiteral.voidOrClass(typeName);
@@ -195,38 +187,28 @@ public class JavaClass {
     this.typeName = typeName;
     this.simpleForm = this.typeName;
 
-    this.className = (this.typeName.contains("<") && this.typeName.contains(">")
-        ? typeName.replace("<(.+?)>", "")
+    this.className = (this.typeName.contains("<") && this.typeName.contains(">") ? typeName.replace("<(.+?)>", "")
         : typeName);
 
     this.annotations = new HashSet<>(annotations);
 
-    final String toStringAnnotation = (annotations.isEmpty()
-        ? "" : annotations.toString() + " ");
+    final String toStringAnnotation = (annotations.isEmpty() ? "" : annotations.toString() + " ");
 
     final String packageToString = this.javaPack.toString();
-    this.canonicalName = (packageToString.isEmpty()
-        ? (toStringAnnotation) + typeName
-        : (toStringAnnotation) + packageToString + "." + this.typeName
-    );
+    this.canonicalName = (packageToString.isEmpty() ? (toStringAnnotation) + typeName
+        : (toStringAnnotation) + packageToString + "." + this.typeName);
 
-    this.reifiedCanonicalName = this.canonicalName
-        .replace(
-            genericsSubstring(this.canonicalName), ""
-        );
+    this.reifiedCanonicalName = JavaClass.getRawTypeName(this.canonicalName);
   }
 
   private static Function<JavaPack, String> notDotsPackageDefinitionFunction(Type type) {
-    return (packageDef) -> getTypeName(type)
-        .filter(t -> t.contains("."))
-        .map(t -> t.replace(packageDef.getName() + ".", ""))
-        .orElse(ReflectConst.MISSING);
+    return (packageDef) -> getTypeName(type).filter(t -> t.contains("."))
+        .map(t -> t.replace(packageDef.getName() + ".", "")).orElse(ReflectConst.MISSING);
   }
 
-  static String getTypeName(Type type, String alternative){
+  static String getTypeName(Type type, String alternative) {
     return getTypeName(type).orElse(alternative);
   }
-
 
   static Optional<String> getTypeName(Type type) {
     try {
@@ -236,8 +218,7 @@ public class JavaClass {
     }
   }
 
-  private static Function<JavaPack, String> onlyFewPackageDefinitionFunction(
-      String genericString) {
+  private static Function<JavaPack, String> onlyFewPackageDefinitionFunction(String genericString) {
     return (packageDef) -> {
       final String genericTypeName = ReflectConst.EXCLUDING_MODIFIERS.matcher(genericString).replaceAll("");
       return genericTypeName.replace(packageDef.getName() + ".", "");
@@ -279,7 +260,6 @@ public class JavaClass {
     }
   }
 
-
   private static boolean isAbstract(Type type) {
     if (type instanceof Class<?>) {
       return Modifier.isAbstract(((Class<?>) type).getModifiers());
@@ -295,15 +275,13 @@ public class JavaClass {
     }
   }
 
-  public static JavaClass from(
-      String pkgString, String candidateTypeName, boolean isDeprecated, boolean isAbstract) {
+  public static JavaClass from(String pkgString, String candidateTypeName, boolean isDeprecated, boolean isAbstract) {
 
     return from(pkgString, candidateTypeName, isDeprecated, isAbstract, new HashSet<>());
   }
 
-
-  public static JavaClass from(String pack, String candidateTypeName,
-      boolean isDeprecated, boolean isAbstract, Set<JavaAnnotation> annotations) {
+  public static JavaClass from(String pack, String candidateTypeName, boolean isDeprecated, boolean isAbstract,
+      Set<JavaAnnotation> annotations) {
 
     if ("void".equals(candidateTypeName)) {
       return JavaClass.voidClassDefinition();
@@ -326,16 +304,15 @@ public class JavaClass {
   }
 
   public static JavaClass from(Type type, Set<JavaAnnotation> annotations) {
-    if (type instanceof ParameterizedType || type instanceof TypeVariable ||
-        type instanceof GenericArrayType || type instanceof Class) {
+    if (type instanceof ParameterizedType || type instanceof TypeVariable || type instanceof GenericArrayType
+        || type instanceof Class) {
       return new JavaClass(type, annotations);
     } else {
       throw new IllegalArgumentException("unknown subtype of Type: " + type.getClass());
     }
   }
 
-  public static JavaClass normalizedClassDefinition(CompilationUnit unit,
-      ITypeBinding typeBinding) {
+  public static JavaClass normalizedClassDefinition(CompilationUnit unit, ITypeBinding typeBinding) {
     final Optional<ITypeBinding> normalized = Optional
         .ofNullable(CommonJdt.normalizeTypeBinding(Objects.requireNonNull(typeBinding)));
 
@@ -356,45 +333,48 @@ public class JavaClass {
     if (typeBinding.toString().contains(ReflectConst.MISSING)) {
       pkgDef = packageName(unit, typeName);
     } else {
-      final Optional<IPackageBinding> packageBinding = Optional
-          .ofNullable(typeBinding.getPackage());
+      final Optional<IPackageBinding> packageBinding = Optional.ofNullable(typeBinding.getPackage());
       pkgDef = packageBinding.isPresent() ? packageBinding.get().getName() : "";
     }
 
     final boolean isClassDeprecated = typeBinding.isDeprecated();
     final boolean isClassAbstract = Modifier.isAbstract(typeBinding.getModifiers());
 
-    final Set<JavaAnnotation> annotations = Immutable.setOf(
-        Arrays.stream(typeBinding.getTypeAnnotations())
-            .map(JavaAnnotation::annotationDefinition)
-    );
+    final Set<JavaAnnotation> annotations = Immutable
+        .setOf(Arrays.stream(typeBinding.getTypeAnnotations()).map(JavaAnnotation::annotationDefinition));
 
     return JavaClass.from(pkgDef, typeName, isClassDeprecated, isClassAbstract, annotations);
   }
 
-  static JavaClass classDefinition(ITypeBinding typeBinding) {
+  public static JavaClass classDefinition(ITypeBinding typeBinding) {
     if (typeBinding == null) {
       throw new IllegalArgumentException("type binding is null");
     }
 
-    final String typeName = typeBinding.isAnonymous() ? typeBinding.getDeclaringClass().getName()
-        : typeBinding.getName();
+    if (typeBinding.getName().equals("UnitLocation") || typeBinding.getName().equals("Index")) {
+      System.out.println();
+    }
+
+    String typeName;
+    if (typeBinding.isAnonymous()) {
+      typeName = typeBinding.getDeclaringClass().getName();
+    } else if (typeBinding.isParameterizedType()) {
+      typeName = JavaClass.getRawTypeName(typeBinding.getName());
+    } else {
+      typeName = typeBinding.getName();
+    }
+
     String pkgDef;
 
     if (typeBinding.toString().contains(ReflectConst.MISSING)) {
-      pkgDef = JavaPack.isJavaLang(typeName)
-          ? ReflectConst.JAVA_LANG_NAMESPACE
-          : ReflectConst.DEFAULT_NAMESPACE;
+      pkgDef = JavaPack.isJavaLang(typeName) ? ReflectConst.JAVA_LANG_NAMESPACE : ReflectConst.DEFAULT_NAMESPACE;
     } else {
-      final Optional<IPackageBinding> packageBinding = Optional
-          .ofNullable(typeBinding.getPackage());
+      final Optional<IPackageBinding> packageBinding = Optional.ofNullable(typeBinding.getPackage());
 
       pkgDef = packageBinding.isPresent() ? packageBinding.get().getName() : ReflectConst.DEFAULT_NAMESPACE;
 
       if (pkgDef.isEmpty()) {
-        pkgDef = JavaPack.isJavaLang(typeName)
-            ? ReflectConst.JAVA_LANG_NAMESPACE
-            : pkgDef;
+        pkgDef = JavaPack.isJavaLang(typeName) ? ReflectConst.JAVA_LANG_NAMESPACE : pkgDef;
       }
     }
 
@@ -404,20 +384,24 @@ public class JavaClass {
     return JavaClass.from(pkgDef, typeName, isClassDeprecated, isClassAbstract);
   }
 
+  /**
+   * Strip out the generic part, if applicable. If not, return the same string.
+   */
+  public static String getRawTypeName(String genericType) {
+    return getTypeErasure(genericType);
+  }
+
   static JavaClass returnClassDefinition(CompilationUnit unit, IMethodBinding methodBinding) {
     return classDefinition(unit, methodBinding.getReturnType());
   }
-
 
   static JavaClass classDefinition(CompilationUnit unit, IMethodBinding methodBinding) {
     return classDefinition(unit, methodBinding.getDeclaringClass());
   }
 
   static Set<String> unitImports(CompilationUnit unit) {
-    return Immutable.setOf(
-        CommonJdt.typeSafeList(ImportDeclaration.class, unit.imports())
-            .stream().map(i -> i.getName().getFullyQualifiedName())
-    );
+    return Immutable.setOf(CommonJdt.typeSafeList(ImportDeclaration.class, unit.imports()).stream()
+        .map(i -> i.getName().getFullyQualifiedName()));
   }
 
   private static String packageName(CompilationUnit unit, String typeName) {
@@ -429,9 +413,7 @@ public class JavaClass {
       }
     }
 
-    return JavaPack.isJavaLang(typeName)
-        ? ReflectConst.JAVA_LANG_NAMESPACE
-        : ReflectConst.DEFAULT_NAMESPACE;
+    return JavaPack.isJavaLang(typeName) ? ReflectConst.JAVA_LANG_NAMESPACE : ReflectConst.DEFAULT_NAMESPACE;
   }
 
   private static String[] perfectCouple(String pkgString, String candidateTypeName) {
@@ -454,28 +436,16 @@ public class JavaClass {
   }
 
   private static JavaClass voidClassDefinition() {
-    return new JavaClass(
-        JavaPack.from("java.lang"),
-        "Void",
-        false,
-        false,
-        Immutable.set()
-    );
+    return new JavaClass(JavaPack.from("java.lang"), "Void", false, false, Immutable.set());
   }
 
   static JavaClass missingClassDefinition() {
-    return new JavaClass(
-        JavaPack.emptyPackage(),
-        ReflectConst.MISSING,
-        false,
-        false,
-        Immutable.set()
-    );
+    return new JavaClass(JavaPack.emptyPackage(), ReflectConst.MISSING, false, false, Immutable.set());
   }
 
   private static JavaClass forceClassNameFormEvenIfFunctionalInterface(Type type) {
-    if (type instanceof ParameterizedType || type instanceof TypeVariable ||
-        type instanceof GenericArrayType || type instanceof Class<?>) {
+    if (type instanceof ParameterizedType || type instanceof TypeVariable || type instanceof GenericArrayType
+        || type instanceof Class<?>) {
       return new JavaClass(type, ReflectConst.NOT_USE_LAMBDA_EXPRESSION);
     } else {
       throw new IllegalArgumentException("unknown subtype of Type: " + type.getClass());
@@ -483,18 +453,15 @@ public class JavaClass {
   }
 
   /**
-   * Returns all implementing interfaces, or super class for a given java.lang.Class object.
+   * Returns all implementing interfaces, or super class for a given
+   * java.lang.Class object.
    *
    * @param klass the class to introspect
    * @return a set containing all implementing interfaces and a super class.
    */
   public static Set<JavaClass> getSuperClassDefinitions(Class<?> klass) {
 
-    return Immutable.setOf(
-        parentsOf(klass)
-            .stream()
-            .map(JavaClass::forceGeneric)
-    );
+    return Immutable.setOf(parentsOf(klass).stream().map(JavaClass::forceGeneric));
   }
 
   public static Set<Class<?>> parentsOf(Class<?> that) {
@@ -534,26 +501,22 @@ public class JavaClass {
     return new JavaClass(klass, klass.toGenericString(), ReflectConst.USE_LAMBDA_EXPRESSION);
   }
 
-  private static Optional<String> typeVariableToActual(
-      Method sam, TypeVariable[] variables, Type[] actual) {
+  private static Optional<String> typeVariableToActual(Method sam, TypeVariable[] variables, Type[] actual) {
 
     final Map<TypeVariable, Type> relation = typeParamRelation(variables, actual);
     final BinaryOperator<String> neverUsed = (lambda1, lambda2) -> null;
 
     final String lambda = relation.entrySet().stream().reduce(toLambda(sam), (l, entry) -> {
       final String tentative = entry.getKey().getTypeName();
-      final String actualName = entry.getValue()
-          .getTypeName()
-          .replaceAll("\\? (super|extends) ", "")
-          .replace("$", "__");
+      final String actualName = entry.getValue().getTypeName().replaceAll("\\? (super|extends) ", "").replace("$",
+          "__");
       return Pattern.compile("\\b" + tentative + "\\b").matcher(l).replaceAll(actualName);
     }, neverUsed);
 
     return Optional.of(lambda);
   }
 
-  private static Map<TypeVariable, Type> typeParamRelation(TypeVariable[] variables,
-      Type[] actual) {
+  private static Map<TypeVariable, Type> typeParamRelation(TypeVariable[] variables, Type[] actual) {
     final Map<TypeVariable, Type> toActual = new HashMap<>();
 
     if (actual.length == 0) {
@@ -572,8 +535,7 @@ public class JavaClass {
   private static String toLambda(final Method method) {
     final Type[] parameterTypes = method.getGenericParameterTypes();
     final Type returnType = method.getGenericReturnType();
-    final JavaClass typeDef = JavaClass
-        .forceClassNameFormEvenIfFunctionalInterface(returnType);
+    final JavaClass typeDef = JavaClass.forceClassNameFormEvenIfFunctionalInterface(returnType);
     final String returnTypeString = typeDef.getSimpleForm();
 
     return String.format("%s -> %s", argumentsInSimpleNotation(parameterTypes), returnTypeString);
@@ -581,51 +543,39 @@ public class JavaClass {
 
   private static String argumentsInSimpleNotation(Type[] arguments) {
     switch (arguments.length) {
-      case 0:
-        return "()";
-      case 1:
-        // arg
-        return JavaClass
-            .forceClassNameFormEvenIfFunctionalInterface(arguments[0])
-            .getSimpleForm();
-      default:
-        // (arg1, arg2)
-        final StringJoiner joiner = new StringJoiner(", ", "(", ")");
-        for (Type eachArg : arguments) {
-          joiner.add(JavaClass
-              .forceClassNameFormEvenIfFunctionalInterface(eachArg)
-              .getSimpleForm()
-          );
-        }
-        return joiner.toString();
+    case 0:
+      return "()";
+    case 1:
+      // arg
+      return JavaClass.forceClassNameFormEvenIfFunctionalInterface(arguments[0]).getSimpleForm();
+    default:
+      // (arg1, arg2)
+      final StringJoiner joiner = new StringJoiner(", ", "(", ")");
+      for (Type eachArg : arguments) {
+        joiner.add(JavaClass.forceClassNameFormEvenIfFunctionalInterface(eachArg).getSimpleForm());
+      }
+      return joiner.toString();
     }
   }
 
-  private static Optional<String> chooseDeclaredSamOrInheritedSam(
-      final Class<?> thisClass, final Type[] actualTypeArgsOfClass) {
-    final Optional<Method> declaredSuperAbstractMethods = findDeclaredSuperAbstractMethods(
-        thisClass);
+  private static Optional<String> chooseDeclaredSamOrInheritedSam(final Class<?> thisClass,
+      final Type[] actualTypeArgsOfClass) {
+    final Optional<Method> declaredSuperAbstractMethods = findDeclaredSuperAbstractMethods(thisClass);
 
     if (declaredSuperAbstractMethods.isPresent()) {
-      return typeVariableToActual(
-          declaredSuperAbstractMethods.get(),
-          thisClass.getTypeParameters(),
-          actualTypeArgsOfClass
-      );
+      return typeVariableToActual(declaredSuperAbstractMethods.get(), thisClass.getTypeParameters(),
+          actualTypeArgsOfClass);
     }
 
     try {
       final Method inheritedSuperAbstractMethod = findInheritedSuperAbstractMethods(thisClass);
 
-      final Class<?> superClass = findDeclaringClassOfInheritedSuperAbstractMethod(
-          thisClass,
-          inheritedSuperAbstractMethod
-      );
+      final Class<?> superClass = findDeclaringClassOfInheritedSuperAbstractMethod(thisClass,
+          inheritedSuperAbstractMethod);
 
       final ParameterizedType parameterizedSuper = superClassAsParameterized(thisClass, superClass);
 
-      return typeVariableToActual(inheritedSuperAbstractMethod,
-          superClass.getTypeParameters(),
+      return typeVariableToActual(inheritedSuperAbstractMethod, superClass.getTypeParameters(),
           parameterizedSuper.getActualTypeArguments());
     } catch (Exception ignored) {
       return Optional.empty();
@@ -634,40 +584,29 @@ public class JavaClass {
   }
 
   private static Optional<Method> findDeclaredSuperAbstractMethods(final Class<?> thisClass) {
-    return Stream.of(thisClass.getDeclaredMethods())
-        .filter(method -> !Modifier.isStatic(method.getModifiers()))
-        .filter(JavaMethod::isAbstract)
-        .filter(JavaMethod::isUndefinedInObjectClass)
-        .findFirst();
+    return Stream.of(thisClass.getDeclaredMethods()).filter(method -> !Modifier.isStatic(method.getModifiers()))
+        .filter(JavaMethod::isAbstract).filter(JavaMethod::isUndefinedInObjectClass).findFirst();
   }
 
-  private static ParameterizedType superClassAsParameterized(
-      final Class<?> thisClass, final Class<?> superClass) {
+  private static ParameterizedType superClassAsParameterized(final Class<?> thisClass, final Class<?> superClass) {
 
-    return Stream.of(thisClass.getGenericInterfaces())
-        .filter(k -> k.getTypeName().startsWith(superClass.getTypeName()))
-        .findFirst()
-        .map(ParameterizedType.class::cast)
-        .orElseThrow(() -> new IllegalStateException(String.format("thisClass:%s superclass:%s",
-            thisClass,
-            superClass)));
+    return Stream.of(thisClass.getGenericInterfaces()).filter(k -> k.getTypeName().startsWith(superClass.getTypeName()))
+        .findFirst().map(ParameterizedType.class::cast).orElseThrow(
+            () -> new IllegalStateException(String.format("thisClass:%s superclass:%s", thisClass, superClass)));
   }
 
   // FIXME
-  private static Class<?> findDeclaringClassOfInheritedSuperAbstractMethod(
-      final Class<?> thisClass, final Method inheritedMethods) {
+  private static Class<?> findDeclaringClassOfInheritedSuperAbstractMethod(final Class<?> thisClass,
+      final Method inheritedMethods) {
 
-    return Stream.of(thisClass.getInterfaces())
-        .filter(klass -> inheritedMethods.getDeclaringClass().equals(klass))
+    return Stream.of(thisClass.getInterfaces()).filter(klass -> inheritedMethods.getDeclaringClass().equals(klass))
         .findFirst().orElseThrow(() -> new IllegalStateException("no implementing interface"));
   }
 
   // FIXME
   private static Method findInheritedSuperAbstractMethods(final Class<?> thisClass) {
-    return Stream.of(thisClass.getMethods())
-        .filter(method -> !Modifier.isStatic(method.getModifiers()))
-        .filter(JavaMethod::isAbstract)
-        .findFirst()
+    return Stream.of(thisClass.getMethods()).filter(method -> !Modifier.isStatic(method.getModifiers()))
+        .filter(JavaMethod::isAbstract).findFirst()
         .orElseThrow(() -> new IllegalStateException("no inherited super abstract method"));
   }
 
@@ -675,7 +614,8 @@ public class JavaClass {
    * Test if the class itself is public and all enclosing classes are public.
    *
    * @param self the Class instance.
-   * @return true if given class is public and its all enclosing classes are public.
+   * @return true if given class is public and its all enclosing classes are
+   *         public.
    */
   public static boolean isPublic(Class<?> self) {
     try {
@@ -694,9 +634,9 @@ public class JavaClass {
   }
 
   /**
-   * Determines if the class or interface represented by this {@code JavaClass} object is
-   * either the same as, or is a superclass or super interface of, the class or interface
-   * represented by the specified {@code JavaClass} parameter.
+   * Determines if the class or interface represented by this {@code JavaClass}
+   * object is either the same as, or is a superclass or super interface of, the
+   * class or interface represented by the specified {@code JavaClass} parameter.
    *
    * @param other the other definition to be checked
    * @return true if it is assignable from; false otherwise.
@@ -710,8 +650,7 @@ public class JavaClass {
 
   }
 
-  private boolean isAssignableFrom(JavaClass thisDefinition, JavaClass thatDefinition,
-      Classpath classpath) {
+  private boolean isAssignableFrom(JavaClass thisDefinition, JavaClass thatDefinition, Classpath classpath) {
     // same definition case
     final String thisReifiedName = thisDefinition.getReifiedCanonicalName();
     final String thatReifiedName = thatDefinition.getReifiedCanonicalName();
@@ -730,9 +669,9 @@ public class JavaClass {
   }
 
   /**
-   * Determines if the class or interface represented by this {@code JavaClass} object is
-   * either the same as, or is a subclass or sub interface of, the class or interface represented by
-   * the specified {@code JavaClass} parameter.
+   * Determines if the class or interface represented by this {@code JavaClass}
+   * object is either the same as, or is a subclass or sub interface of, the class
+   * or interface represented by the specified {@code JavaClass} parameter.
    *
    * @param other the other definition to be checked
    * @return true if they are compatible; false otherwise.
@@ -744,9 +683,7 @@ public class JavaClass {
     return isAssignableFrom(thatDefinition, thisDefinition, classpath);
   }
 
-
-  private static Set<JavaClass> childrenOf(JavaClass thisDefinition,
-      Classpath classpath) {
+  private static Set<JavaClass> childrenOf(JavaClass thisDefinition, Classpath classpath) {
     if (thisDefinition == null) {
       return Immutable.set();
     }
@@ -782,7 +719,6 @@ public class JavaClass {
     return typeName;
   }
 
-
   public String getClassName() {
     return className;
   }
@@ -799,16 +735,9 @@ public class JavaClass {
     return isAbstract;
   }
 
-  private static String genericsSubstring(final String typeName) {
-    if (typeName == null || typeName.isEmpty()) {
-      throw new IllegalArgumentException("cannot generate a generics substring with null typename");
-    }
-
-    return Strings.firstNonNullString(Strings.textWithin(typeName, "<", ">"), "");
-  }
-
   /**
-   * Returns lambda-expression if this type is functional interface, otherwise just type name.
+   * Returns lambda-expression if this type is functional interface, otherwise
+   * just type name.
    */
   public String getSimpleForm() {
     return simpleForm;
@@ -829,14 +758,16 @@ public class JavaClass {
           parameterized.getActualTypeArguments());
     }
 
-    return chooseDeclaredSamOrInheritedSam((Class) type, new Type[]{});
+    return chooseDeclaredSamOrInheritedSam((Class) type, new Type[] {});
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return canonicalName.hashCode();
   }
 
-  @Override public boolean equals(final Object o) {
+  @Override
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
@@ -849,15 +780,11 @@ public class JavaClass {
     return canonicalName.equals(typeDef.canonicalName);
   }
 
-  @Override public String toString() {
-    return "JavaClass (" +
-        "pkgDef=" + javaPack +
-        ", qualifiedName='" + getReifiedCanonicalName() + '\'' +
-        ", isDeprecated='" + isDeprecated() + '\'' +
-        ", isAbstract='" + isDeprecated() + '\'' +
-        ", type=" + typeLiteral +
-        (!annotations.isEmpty() ? (", annotatedWith=" + annotations) : "") +
-        ')';
+  @Override
+  public String toString() {
+    return "JavaClass (" + "pkgDef=" + javaPack + ", qualifiedName='" + getReifiedCanonicalName() + '\''
+        + ", isDeprecated='" + isDeprecated() + '\'' + ", isAbstract='" + isDeprecated() + '\'' + ", type="
+        + typeLiteral + (!annotations.isEmpty() ? (", annotatedWith=" + annotations) : "") + ')';
   }
 
 }
